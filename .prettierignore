@@ -1,0 +1,9 @@
+node_modules
+.next
+.turbo
+coverage
+pnpm-lock.yaml
+supabase/.temp
+supabase/.branches
+next-env.d.ts
+CLAUDE.md

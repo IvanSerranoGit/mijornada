@@ -1,0 +1,18 @@
+; Zona DNS de mijornada.xyz (Cloudflare, plan gratuito).
+; Todos los registros van en modo "solo DNS" (sin proxy) para que Vercel emita los certificados.
+; Se aplica con `scripts/cloudflare-zona.sh`.
+$ORIGIN mijornada.xyz.
+$TTL 300
+
+; --- Vercel (proyecto mijornada) ---------------------------------------------
+@       IN  A      216.150.1.1
+@       IN  A      216.150.16.1
+www     IN  CNAME  44e434c76f92f79c.vercel-dns-016.com.
+
+; --- Correo: placeholders, descomentar al elegir proveedor de envío ----------
+; SPF: quién puede enviar correo a nombre del dominio.
+; @                      IN  TXT  "v=spf1 include:<proveedor-de-correo> ~all"
+; DKIM: llave pública que entrega el proveedor.
+; <selector>._domainkey  IN  TXT  "v=DKIM1; k=rsa; p=<llave-publica-dkim>"
+; DMARC: iniciar en p=none y endurecer a quarantine/reject al validar los reportes.
+; _dmarc                 IN  TXT  "v=DMARC1; p=none; rua=mailto:<buzon-dmarc>@mijornada.xyz"
