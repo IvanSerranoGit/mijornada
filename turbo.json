@@ -12,7 +12,8 @@
     "lint": {},
     "typecheck": {},
     "test": {
-      "env": ["DATABASE_URL", "SUPABASE_DB_URL"]
+      "env": ["DATABASE_URL", "SUPABASE_DB_URL"],
+      "cache": false
     }
   }
 }

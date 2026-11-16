@@ -115,6 +115,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@mijornada/dominio':
+        specifier: workspace:*
+        version: link:../dominio
       drizzle-orm:
         specifier: ^0.45.4
         version: 0.45.4(postgres@4.1.1)
