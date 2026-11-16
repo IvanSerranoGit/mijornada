@@ -7,7 +7,7 @@ proyecto y sus principios están en [`CLAUDE.md`](./CLAUDE.md).
 
 - Node.js 24 (`.nvmrc`) y pnpm 10
 - Docker Desktop en ejecución
-- Supabase CLI 2.75 o superior
+- Supabase CLI 3.2 o superior (con la 2.75 `supabase db reset` falla con un error 502)
 
 ## Entorno local
 
@@ -46,13 +46,6 @@ packages/db         Cliente de base de datos y ejecución de seeds
 supabase/migrations Migraciones SQL numeradas (nunca se edita una ya aplicada)
 supabase/seeds      Seeds versionados e idempotentes
 ```
-
-## Nota sobre `pnpm db:reset`
-
-Con Supabase CLI 2.75, `supabase db reset` termina con un error 502 después de aplicar las
-migraciones porque el gateway local conserva la IP anterior de Storage.
-`scripts/db-reset.sh` detecta ese caso y reinicia el gateway; los errores reales de migración
-se siguen propagando.
 
 ## Infraestructura
 

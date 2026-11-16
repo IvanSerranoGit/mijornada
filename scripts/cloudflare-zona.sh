@@ -3,7 +3,7 @@
 # `infra/dns/mijornada.xyz.zone` y muestra los nameservers que hay que capturar en Akky.
 #
 # Requiere en `.env.local`: CLOUDFLARE_API_TOKEN (permisos Zone:Edit y DNS:Edit)
-# y, opcionalmente, CLOUDFLARE_ACCOUNT_ID.
+# y CLOUDFLARE_ACCOUNT_ID (el token no puede listar cuentas; el ID está en la URL del panel).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -11,7 +11,8 @@ ZONE_NAME="mijornada.xyz"
 ZONE_FILE="infra/dns/${ZONE_NAME}.zone"
 API="https://api.cloudflare.com/client/v4"
 
-read_env() { grep -E "^$1=" .env.local 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '"'"'"; }
+# Lee una variable de .env.local; devuelve vacío si no está definida.
+read_env() { { grep -E "^$1=" .env.local 2>/dev/null || true; } | tail -1 | cut -d= -f2- | tr -d '"'"'"; }
 TOKEN="${CLOUDFLARE_API_TOKEN:-$(read_env CLOUDFLARE_API_TOKEN)}"
 ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-$(read_env CLOUDFLARE_ACCOUNT_ID)}"
 [ -n "$TOKEN" ] || { echo "Falta CLOUDFLARE_API_TOKEN en .env.local" >&2; exit 1; }
