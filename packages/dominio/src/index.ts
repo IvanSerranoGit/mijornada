@@ -17,3 +17,4 @@ export * from "./calculo.ts";
 export * from "./hash.ts";
 export * from "./merkle.ts";
 export * from "./uuid.ts";
+export * from "./sectores.ts";
