@@ -17,3 +17,6 @@ supabase/.branches
 .vercel
 
 .DS_Store
+
+# Generado por `next dev`
+apps/*/AGENTS.md
