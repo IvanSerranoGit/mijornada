@@ -106,10 +106,11 @@ Estados: **Abierta** · **Respondida** (anotar fecha, respuesta y qué se cambi�
 - **Pregunta:** Cuando el dispositivo no tenía red, la marca se guarda con la hora del dispositivo
   y se envía después. ¿Es aceptable usar la hora del dispositivo para el cálculo si la marca llega
   dentro de 24 horas? ¿Y si llega después?
-- **Qué asume hoy el sistema:** guarda las dos horas (dispositivo y servidor). El documento de
-  fundamentos prevé marcar como "sincronización tardía" lo que llegue más de 24 h después; aún no
-  está implementado.
-- **Dónde cambia:** la API de marcaje (sprint 2).
+- **Qué asume hoy el sistema:** guarda las dos horas (dispositivo y servidor). Lo que llega más de
+  24 h después de la hora del dispositivo se acepta y queda marcado como "sincronización tardía".
+  Falta definir cuál de las dos horas usa el cálculo.
+- **Dónde cambia:** el trigger `jornada.encadenar_evento` (umbral de 24 h) y el proceso que llena
+  `jornada.dia_laboral`.
 
 ### 11. Trabajador que no acepta el convenio de registro
 

@@ -33,7 +33,8 @@ Supabase Studio queda en http://127.0.0.1:54323. Para detener el entorno: `pnpm 
 | `pnpm db:reset`   | Recrea la base local desde cero (migraciones y seeds)       |
 | `pnpm db:seed`    | Vuelve a aplicar los seeds idempotentes de `supabase/seeds` |
 
-Antes de dar una tarea por terminada: `pnpm lint`, `pnpm typecheck` y `pnpm test` en verde.
+Antes de dar una tarea por terminada: `pnpm lint`, `pnpm typecheck` y `pnpm test` en verde. GitHub
+Actions corre lo mismo en cada PR (`.github/workflows/ci.yml`).
 
 ## Base de datos
 
@@ -46,6 +47,11 @@ se aplica desde cero con `pnpm db:reset`.
   insertar, la base fija `ts_servidor`, encadena el hash con el evento anterior del trabajador e
   ignora un `client_event_id` repetido. `jornada.verificar_cadena(tenant, trabajador)` dice si la
   cadena está íntegra y dónde se rompe.
+- **Sincronización tardía**: un marcaje que llega más de 24 h después de la hora del dispositivo
+  queda con `origen = 'sincronizacion_tardia'`; lo decide la base, no el cliente.
+- **Verificación de reportes**: `cumplimiento.verificar_reporte(reporte)` recorre la cadena de cada
+  trabajador del reporte. Es lo único, además del reporte, que puede consultar un inspector, y cada
+  consulta suya queda en `auditoria.bitacora_admin`.
 - **Sello diario**: un job de pg_cron corre cada hora y sella los días terminados de cada tenant a
   partir de las 02:00 de su hora local (`jornada.sello_diario`, raíz Merkle).
 - **Reglas con vigencia**: `calculo.regla` se precarga con el calendario 2026-2030 desde
