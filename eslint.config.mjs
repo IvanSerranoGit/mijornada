@@ -17,6 +17,7 @@ export default defineConfig(
     "**/coverage/**",
     "**/next-env.d.ts",
     "supabase/**",
+    "**/database.types.ts",
   ]),
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,

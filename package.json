@@ -17,7 +17,8 @@
     "db:stop": "supabase stop",
     "db:migrate": "supabase migration up",
     "db:reset": "supabase db reset",
-    "db:seed": "pnpm --filter @mijornada/db seed"
+    "db:seed": "pnpm --filter @mijornada/db seed",
+    "db:types": "supabase gen types typescript --local --schema tenants,jornada,calculo > packages/db/src/database.types.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
