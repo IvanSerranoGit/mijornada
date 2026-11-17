@@ -1,6 +1,8 @@
 import type { Database } from "@mijornada/db/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+export type { Database };
+
 /** Cliente de Supabase con la sesión de quien llama: RLS decide qué puede ver y hacer. */
 export type Db = SupabaseClient<Database>;
 
