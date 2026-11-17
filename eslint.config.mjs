@@ -44,5 +44,10 @@ export default defineConfig(
       ...nextPlugin.configs["core-web-vitals"].rules,
     },
   },
+  {
+    // En las pruebas se tipa la respuesta esperada con un genérico (`api<T>()`).
+    files: ["**/test/**/*.ts"],
+    rules: { "@typescript-eslint/no-unnecessary-type-parameters": "off" },
+  },
   prettier,
 );
