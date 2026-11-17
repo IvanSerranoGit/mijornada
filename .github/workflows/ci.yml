@@ -38,7 +38,16 @@ jobs:
         with:
           version: 3.2.0
 
-      # `supabase start` aplica las migraciones y los seeds desde cero.
-      - run: supabase start
+      # `supabase start` aplica las migraciones y los seeds desde cero. Sus puertos
+      # (54321-54324) caen en el rango efímero de Linux y a veces el runner ya tiene
+      # uno ocupado: se reintenta.
+      - name: supabase start
+        run: |
+          for intento in 1 2 3; do
+            if supabase start; then exit 0; fi
+            supabase stop --no-backup || true
+            sleep 5
+          done
+          exit 1
 
       - run: pnpm test
