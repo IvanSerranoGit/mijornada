@@ -166,3 +166,21 @@ export async function handleKioscoRequest(
     return errorResponseFrom(error);
   }
 }
+
+/**
+ * Purga de fotos de marcaje con más de 90 días. Corre en el servidor con rol de
+ * servicio (Storage no permite borrar objetos con SQL directo, así que no puede
+ * ser un job de pg_cron). En el evento queda el hash de la foto.
+ */
+export async function purgarFotos(admin: Db, limite = 500): Promise<{ purgadas: number }> {
+  const { data, error } = await admin
+    .schema("jornada")
+    .rpc("fotos_por_purgar", { p_limite: limite });
+  if (error) throw fromDatabase(error);
+  const rutas = data.map((fila) => fila.ruta);
+  if (rutas.length === 0) return { purgadas: 0 };
+
+  const { error: removeError } = await admin.storage.from("marcajes").remove(rutas);
+  if (removeError) throw new ApiError(502, "purga_fallida", "No se pudieron borrar las fotos.");
+  return { purgadas: rutas.length };
+}

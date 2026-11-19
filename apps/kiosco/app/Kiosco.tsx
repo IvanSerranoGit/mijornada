@@ -3,8 +3,10 @@
 import { uuidV7 } from "@mijornada/dominio";
 import {
   Almacen,
+  alSincronizar,
   ColaMarcajes,
   hashBlob,
+  pedirSincronizacion,
   toJpeg,
   type MarcaPendiente,
   type ResultadoEnvio,
@@ -251,6 +253,9 @@ function Marcaje({
     };
     window.addEventListener("online", online);
     window.addEventListener("offline", offline);
+    const dejarDeEscuchar = alSincronizar(() => {
+      void sincronizar();
+    });
     void sincronizar();
 
     // La configuración puede haber cambiado en el panel (foto, nombre del centro).
@@ -267,6 +272,7 @@ function Marcaje({
       clearInterval(reintento);
       window.removeEventListener("online", online);
       window.removeEventListener("offline", offline);
+      dejarDeEscuchar();
     };
     // Solo al montar: el vínculo se refresca una vez por carga.
   }, []);
@@ -322,6 +328,7 @@ function Marcaje({
           payload,
           ...(foto ? { foto } : {}),
         });
+        void pedirSincronizacion();
         await sincronizar();
 
         const respuesta = respuestas.current.get(payload.client_event_id);

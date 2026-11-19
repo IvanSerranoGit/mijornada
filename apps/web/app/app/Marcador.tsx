@@ -4,8 +4,10 @@ import type { EventoCrear, ResultadoEvento, SemanaTrabajador } from "@mijornada/
 import { uuidV7 } from "@mijornada/dominio";
 import {
   Almacen,
+  alSincronizar,
   ColaMarcajes,
   hashBlob,
+  pedirSincronizacion,
   toJpeg,
   ubicacionPuntual,
   type MarcaPendiente,
@@ -122,6 +124,9 @@ export function Marcador(props: Props) {
     };
     window.addEventListener("online", online);
     window.addEventListener("offline", offline);
+    const dejarDeEscuchar = alSincronizar(() => {
+      void sincronizar();
+    });
 
     void getAlmacen()
       .get<UltimaLocal & { fecha: string }>("ultima")
@@ -135,6 +140,7 @@ export function Marcador(props: Props) {
       clearInterval(reintento);
       window.removeEventListener("online", online);
       window.removeEventListener("offline", offline);
+      dejarDeEscuchar();
     };
   }, [props.hoy, sincronizar]);
 
@@ -169,6 +175,7 @@ export function Marcador(props: Props) {
         payload,
         ...(foto ? { foto } : {}),
       });
+      void pedirSincronizacion();
       const nueva = { tipo: siguiente, hora: hora.toISOString() };
       setLocal(nueva);
       await getAlmacen().set("ultima", { ...nueva, fecha: props.hoy });

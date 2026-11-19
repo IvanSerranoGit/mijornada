@@ -168,3 +168,32 @@ export function ubicacionPuntual(
     );
   });
 }
+
+const SYNC_TAG = "cola-marcajes";
+
+/**
+ * Pide al navegador que avise cuando vuelva la red (Background Sync). Donde no
+ * existe (iOS), la cola se envía al abrir la app, al recuperar la conexión o cada 30 s.
+ */
+export async function pedirSincronizacion(): Promise<void> {
+  try {
+    const registration = (await navigator.serviceWorker.ready) as ServiceWorkerRegistration & {
+      sync?: { register: (tag: string) => Promise<void> };
+    };
+    await registration.sync?.register(SYNC_TAG);
+  } catch {
+    // Sin service worker o sin permiso: quedan los otros disparadores.
+  }
+}
+
+/** Ejecuta `callback` cuando el service worker avisa que hay que enviar la cola. Devuelve cómo dejar de escuchar. */
+export function alSincronizar(callback: () => void): () => void {
+  if (!("serviceWorker" in navigator)) return () => undefined;
+  const listener = (event: MessageEvent) => {
+    if ((event.data as { tipo?: string } | null)?.tipo === "sincronizar-cola") callback();
+  };
+  navigator.serviceWorker.addEventListener("message", listener);
+  return () => {
+    navigator.serviceWorker.removeEventListener("message", listener);
+  };
+}
