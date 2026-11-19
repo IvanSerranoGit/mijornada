@@ -274,7 +274,13 @@ export interface ResultadoEvento {
   client_event_id: string;
   /** insertado: es nuevo. existente: ya se había recibido ese client_event_id. */
   estado: "insertado" | "existente" | "rechazado";
-  evento?: { id: string; ts_servidor: string; origen: string; tipo: string };
+  evento?: {
+    id: string;
+    ts_servidor: string;
+    origen: string;
+    tipo: string;
+    foto_url: string | null;
+  };
   error?: { codigo: string; mensaje: string };
 }
 
@@ -298,7 +304,7 @@ export async function createEventos(
       .schema("jornada")
       .from("evento")
       .insert({ ...defined(evento), tenant_id: tenantId, creado_por: creadoPor })
-      .select("id, ts_servidor, origen, tipo");
+      .select("id, ts_servidor, origen, tipo, foto_url");
 
     if (error) {
       const apiError = fromDatabase(error);
@@ -324,7 +330,7 @@ export async function createEventos(
     const { data: existente } = await ctx.db
       .schema("jornada")
       .from("evento")
-      .select("id, ts_servidor, origen, tipo")
+      .select("id, ts_servidor, origen, tipo, foto_url")
       .eq("trabajador_id", evento.trabajador_id)
       .eq("client_event_id", evento.client_event_id)
       .maybeSingle();

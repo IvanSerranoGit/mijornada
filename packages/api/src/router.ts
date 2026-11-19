@@ -2,7 +2,7 @@
 // Request y Response estándar, así que cualquier app puede montarla.
 import { z } from "zod";
 import type { Ctx } from "./context.ts";
-import { ApiError, fromDatabase, noAutenticado } from "./errors.ts";
+import { ApiError, errorResponseFrom, fromDatabase, noAutenticado } from "./errors.ts";
 import * as h from "./handlers.ts";
 import * as s from "./schemas.ts";
 
@@ -249,28 +249,7 @@ function json(status: number, body: unknown): Response {
   return Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 }
 
-export function errorResponse(error: unknown): Response {
-  if (error instanceof ApiError) {
-    return json(error.status, { codigo: error.codigo, mensaje: error.message });
-  }
-  if (error instanceof z.ZodError) {
-    const issue = error.issues[0];
-    const campo = issue?.path.join(".");
-    return json(422, {
-      codigo: "datos_invalidos",
-      mensaje: issue
-        ? campo
-          ? `${campo}: ${issue.message}`
-          : issue.message
-        : "Los datos no son válidos.",
-    });
-  }
-  console.error(error);
-  return json(500, {
-    codigo: "error_interno",
-    mensaje: "Ocurrió un error inesperado. Intenta de nuevo.",
-  });
-}
+export const errorResponse = errorResponseFrom;
 
 export interface HandleOptions {
   /** Contexto de quien llama, o null si no hay sesión válida. */

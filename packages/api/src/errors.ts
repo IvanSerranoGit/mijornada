@@ -1,4 +1,5 @@
 // Errores de la API: siempre { codigo, mensaje } con mensaje en español.
+import { z } from "zod";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -63,9 +64,49 @@ export function fromDatabase(error: PostgrestLikeError): ApiError {
       );
     case "23001":
       return new ApiError(409, "inmutable", error.message);
+    case "P0002":
+      return new ApiError(
+        404,
+        "no_encontrado",
+        propio ? error.message : "El registro no existe o no tienes acceso.",
+      );
+    case "28P01":
+      return new ApiError(403, "pin_incorrecto", propio ? error.message : "El PIN no coincide.");
     case "PGRST116":
       return new ApiError(404, "no_encontrado", "El registro no existe o no tienes acceso.");
     default:
       return new ApiError(500, "error_interno", "Ocurrió un error inesperado. Intenta de nuevo.");
   }
+}
+
+/** Convierte cualquier error en la respuesta JSON { codigo, mensaje } de la API. */
+export function errorResponseFrom(error: unknown): Response {
+  const json = (status: number, body: unknown) =>
+    Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
+  if (error instanceof ApiError) {
+    return json(error.status, { codigo: error.codigo, mensaje: error.message });
+  }
+  if (error instanceof z.ZodError) {
+    const issue = error.issues[0];
+    const campo = issue?.path.join(".");
+    return json(422, {
+      codigo: "datos_invalidos",
+      mensaje: issue
+        ? campo
+          ? `${campo}: ${issue.message}`
+          : issue.message
+        : "Los datos no son válidos.",
+    });
+  }
+  if (error instanceof SyntaxError) {
+    return json(400, {
+      codigo: "json_invalido",
+      mensaje: "El cuerpo de la petición no es JSON válido.",
+    });
+  }
+  console.error(error);
+  return json(500, {
+    codigo: "error_interno",
+    mensaje: "Ocurrió un error inesperado. Intenta de nuevo.",
+  });
 }

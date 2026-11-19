@@ -29,8 +29,19 @@ export const admin: SupabaseClient<Database> = createClient<Database>(
   options,
 );
 
+/** Cliente sin sesión (llave pública), como el que usa el kiosco. */
+export const publico: SupabaseClient<Database> = createClient<Database>(
+  status.API_URL,
+  status.ANON_KEY,
+  options,
+);
+
+/** Cliente nuevo sin sesión, para abrir en él la sesión de un trabajador. */
+export const newClient = (): SupabaseClient<Database> =>
+  createClient<Database>(status.API_URL, status.ANON_KEY, options);
+
 let counter = 0;
-const unique = () =>
+export const unique = () =>
   `${Date.now().toString(36)}${(counter += 1).toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
 export interface Actor {

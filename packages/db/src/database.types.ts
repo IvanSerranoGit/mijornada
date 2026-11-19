@@ -655,6 +655,9 @@ isOneToOne: false
               "id": string,"pin": string,"qr_token": string
             }[]
                            },
+"cuenta_de_empleado":
+{ Args: { "p_correo": string }; Returns: string
+                           },
 "descifrar":
 { Args: { "p_dato": string,"p_tenant_id": string }; Returns: string
                            },

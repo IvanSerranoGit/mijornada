@@ -5,9 +5,11 @@
 export const API_VERSION = "v1";
 export const API_BASE_PATH = `/api/${API_VERSION}`;
 
+export * from "./acceso.ts";
 export * from "./context.ts";
 export * from "./errors.ts";
 export * from "./handlers.ts";
+export * from "./kiosco.ts";
 export * from "./openapi.ts";
 export * from "./router.ts";
 export * from "./schemas.ts";
