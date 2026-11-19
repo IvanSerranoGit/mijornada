@@ -79,11 +79,16 @@ export async function expectPgError(tx: Tx, fn: (sp: Tx) => Promise<unknown>): P
 }
 
 let counter = 0;
+// Cada archivo de pruebas corre en su propio proceso y en paralelo: el prefijo
+// aleatorio evita que dos procesos usen los mismos ids y se bloqueen entre sí.
+const prefix = Array.from(globalThis.crypto.getRandomValues(new Uint8Array(4)), (b) =>
+  b.toString(16).padStart(2, "0"),
+).join("");
 
-/** UUID fijo y legible para datos de prueba. */
+/** UUID único y legible para datos de prueba. */
 export function testId(): string {
   counter += 1;
-  return `00000000-0000-4000-8000-${counter.toString(16).padStart(12, "0")}`;
+  return `${prefix}-0000-4000-8000-${counter.toString(16).padStart(12, "0")}`;
 }
 
 export interface Tenant {
