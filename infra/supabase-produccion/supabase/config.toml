@@ -20,3 +20,10 @@ additional_redirect_urls = ["https://mijornada.xyz/auth/callback"]
 [auth.hook.custom_access_token]
 enabled = true
 uri = "pg-functions://postgres/tenants/claims_token_acceso"
+
+# PROVISIONAL (piloto): la confirmación de correo está apagada porque el correo
+# incluido de Supabase no entrega a direcciones externas. Volver a encenderla
+# (quitar este bloque y `supabase config push`) cuando el SMTP de Resend esté
+# verificado.
+[auth.email]
+enable_confirmations = false
