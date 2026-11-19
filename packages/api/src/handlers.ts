@@ -1,6 +1,19 @@
 // Handlers puros de /api/v1: reciben el cliente de Supabase con la sesión del
 // usuario y datos ya validados, y devuelven resultados tipados. Los usan por
 // igual los route handlers y las pantallas (server actions).
+import {
+  addDays,
+  computeWeek,
+  dateInZone,
+  isoWeekday,
+  mondayOf,
+  resolveWorkRules,
+  scheduledMinutes,
+  weekStatus,
+  type EstadoSemana,
+  type Regla,
+  type ResumenSemana,
+} from "@mijornada/dominio";
 import type { Ctx } from "./context.ts";
 import { ApiError, fromDatabase, invalido, noEncontrado } from "./errors.ts";
 import type {
@@ -377,4 +390,160 @@ export async function listReglas(ctx: Ctx, fecha: string = new Date().toISOStrin
     .order("clave");
   if (error) throw fromDatabase(error);
   return data;
+}
+
+// ---------------------------------------------------------------- panel del dueño
+
+export interface SemanaTrabajador {
+  trabajador: {
+    id: string;
+    nombre: string;
+    puesto: string | null;
+    centro_id: string;
+    menor_de_edad: boolean;
+  };
+  /** Último marcaje de hoy, si lo hay. */
+  ultimaMarca: { tipo: string; hora: string; origen: string } | null;
+  dias: {
+    fecha: string;
+    minutosTrabajados: number;
+    estado: string | null;
+    entrada: string | null;
+    salida: string | null;
+  }[];
+  resumen: ResumenSemana;
+  estado: EstadoSemana;
+}
+
+export interface PanelSemanal {
+  hoy: string;
+  lunes: string;
+  zonaHoraria: string;
+  centros: { id: string; nombre: string; zona_horaria: string }[];
+  trabajadores: SemanaTrabajador[];
+}
+
+/**
+ * Semana en curso de cada trabajador visible: días, horas ordinarias y extra
+ * contra las reglas vigentes, y el estado que resume sus alertas.
+ */
+export async function getPanelSemanal(ctx: Ctx, ahora: Date = new Date()): Promise<PanelSemanal> {
+  const tenantId = requireTenant(ctx);
+  const empresa = await getEmpresa(ctx, tenantId);
+  const hoy = dateInZone(ahora, empresa.zona_horaria);
+  const lunes = mondayOf(hoy);
+  const domingo = addDays(lunes, 6);
+
+  const [centros, trabajadores, horarios, dias, reglas, eventos] = await Promise.all([
+    listCentros(ctx),
+    listTrabajadores(ctx, { limite: 200 }),
+    ctx.db
+      .schema("tenants")
+      .from("horario")
+      .select("trabajador_id, vigente_desde, vigente_hasta, dias, hora_entrada, hora_salida")
+      .lte("vigente_desde", domingo)
+      .or(`vigente_hasta.is.null,vigente_hasta.gte.${lunes}`),
+    ctx.db
+      .schema("jornada")
+      .from("dia_laboral")
+      .select("*")
+      .gte("fecha", lunes)
+      .lte("fecha", domingo),
+    ctx.db.schema("calculo").from("regla").select("clave, valor, vigente_desde, vigente_hasta"),
+    ctx.db
+      .schema("jornada")
+      .from("evento")
+      .select("trabajador_id, tipo, ts_servidor, ts_dispositivo, origen")
+      .in("tipo", ["entrada", "salida", "inicio_pausa", "fin_pausa"])
+      .gte("ts_servidor", new Date(ahora.getTime() - 36 * 3_600_000).toISOString())
+      .order("ts_servidor", { ascending: false })
+      .limit(1000),
+  ]);
+  for (const result of [horarios, dias, reglas, eventos]) {
+    if (result.error) throw fromDatabase(result.error);
+  }
+
+  const reglasDominio: Regla[] = (reglas.data ?? []).map((r) => ({
+    clave: r.clave,
+    valor: r.valor,
+    vigenteDesde: r.vigente_desde,
+    vigenteHasta: r.vigente_hasta,
+  }));
+  const vigentes = resolveWorkRules(reglasDominio, lunes);
+
+  const semana = trabajadores.datos
+    .filter((t) => t.fecha_baja === null || t.fecha_baja >= lunes)
+    .map((t): SemanaTrabajador => {
+      const diasSemana = Array.from({ length: 7 }, (_, i) => {
+        const fecha = addDays(lunes, i);
+        const dia = (dias.data ?? []).find((d) => d.trabajador_id === t.id && d.fecha === fecha);
+        const horario = (horarios.data ?? []).find(
+          (h) =>
+            h.trabajador_id === t.id &&
+            h.vigente_desde <= fecha &&
+            (h.vigente_hasta === null || h.vigente_hasta >= fecha) &&
+            Array.isArray(h.dias) &&
+            h.dias.includes(isoWeekday(fecha)),
+        );
+        return {
+          fecha,
+          minutosTrabajados: dia?.minutos_trabajados ?? 0,
+          estado: dia?.estado ?? null,
+          entrada: dia?.entrada ?? null,
+          salida: dia?.salida ?? null,
+          pactada: horario
+            ? scheduledMinutes(horario.hora_entrada, horario.hora_salida)
+            : undefined,
+        };
+      });
+
+      const resumen = computeWeek({
+        dias: diasSemana.map((d) => ({
+          fecha: d.fecha,
+          minutosTrabajados: d.minutosTrabajados,
+          ...(d.pactada === undefined ? {} : { minutosJornadaPactada: d.pactada }),
+        })),
+        menorDeEdad: t.menor_de_edad,
+        reglas: reglasDominio,
+      });
+
+      const ultima = (eventos.data ?? []).find((e) => {
+        const hora = new Date(e.ts_dispositivo ?? e.ts_servidor);
+        return e.trabajador_id === t.id && dateInZone(hora, empresa.zona_horaria) === hoy;
+      });
+
+      return {
+        trabajador: {
+          id: t.id,
+          nombre: t.nombre,
+          puesto: t.puesto,
+          centro_id: t.centro_id,
+          menor_de_edad: t.menor_de_edad,
+        },
+        ultimaMarca: ultima
+          ? {
+              tipo: ultima.tipo,
+              hora: ultima.ts_dispositivo ?? ultima.ts_servidor,
+              origen: ultima.origen,
+            }
+          : null,
+        dias: diasSemana.map((d) => ({
+          fecha: d.fecha,
+          minutosTrabajados: d.minutosTrabajados,
+          estado: d.estado,
+          entrada: d.entrada,
+          salida: d.salida,
+        })),
+        resumen,
+        estado: weekStatus(resumen, vigentes, t.menor_de_edad),
+      };
+    });
+
+  return {
+    hoy,
+    lunes,
+    zonaHoraria: empresa.zona_horaria,
+    centros: centros.map((c) => ({ id: c.id, nombre: c.nombre, zona_horaria: c.zona_horaria })),
+    trabajadores: semana,
+  };
 }
