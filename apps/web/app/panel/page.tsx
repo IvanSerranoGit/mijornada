@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { salir } from "../(cuenta)/actions.ts";
 import { getCtx } from "../../lib/supabase/server.ts";
+import { Invitar } from "./Invitar.tsx";
 
 export const metadata: Metadata = { title: "Panel · Mi Jornada" };
 export const dynamic = "force-dynamic";
@@ -91,6 +92,7 @@ function FilaSemana({
           ? ` (${horas(semana.resumen.minutosExtraTriples)} triples)`
           : ""}
       </p>
+      <Invitar trabajadorId={semana.trabajador.id} />
     </li>
   );
 }

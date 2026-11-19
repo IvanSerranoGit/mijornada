@@ -23,10 +23,16 @@ export async function proxy(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const { pathname } = request.nextUrl;
 
-  if (!data && PROTEGIDAS.some((ruta) => pathname === ruta || pathname.startsWith(`${ruta}/`))) {
+  if (
+    !data &&
+    pathname !== "/app/entrar" &&
+    PROTEGIDAS.some((ruta) => pathname === ruta || pathname.startsWith(`${ruta}/`))
+  ) {
     const url = request.nextUrl.clone();
-    url.pathname = "/entrar";
-    url.search = `?siguiente=${encodeURIComponent(pathname)}`;
+    // El trabajador entra con correo + PIN; el patrón, con su cuenta.
+    const esPwa = pathname === "/app" || pathname.startsWith("/app/");
+    url.pathname = esPwa ? "/app/entrar" : "/entrar";
+    url.search = esPwa ? "" : `?siguiente=${encodeURIComponent(pathname)}`;
     return NextResponse.redirect(url);
   }
 

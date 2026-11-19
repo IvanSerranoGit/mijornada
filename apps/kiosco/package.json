@@ -13,6 +13,7 @@
   "dependencies": {
     "@mijornada/api": "workspace:*",
     "@mijornada/dominio": "workspace:*",
+    "@mijornada/offline": "workspace:*",
     "@mijornada/ui": "workspace:*",
     "next": "^16.4.6",
     "react": "^19.3.1",
