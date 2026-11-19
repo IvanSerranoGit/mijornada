@@ -1,0 +1,900 @@
+
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+
+export type Database = {
+  
+  "calculo": {
+          Tables: {
+            "regla": {
+                  Row: {
+                    "clave": string,"creado_en": string,"fuente": string,"id": string,"unidad": string,"valor": number,"vigente_desde": string,"vigente_hasta": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "clave": string,"creado_en"?: string,"fuente": string,"id"?: string,"unidad": string,"valor": number,"vigente_desde": string,"vigente_hasta"?: string | null
+                  }
+                  Update: {
+                    "clave"?: string,"creado_en"?: string,"fuente"?: string,"id"?: string,"unidad"?: string,"valor"?: number,"vigente_desde"?: string,"vigente_hasta"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"resumen_periodo": {
+                  Row: {
+                    "alertas": NonNullable<Json>,"extra_dobles": number,"extra_triples": number,"horas_ordinarias": number,"periodo_fin": string,"periodo_inicio": string,"recalculado_en": string,"tenant_id": string,"trabajador_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "alertas"?: NonNullable<Json>,"extra_dobles"?: number,"extra_triples"?: number,"horas_ordinarias"?: number,"periodo_fin": string,"periodo_inicio": string,"recalculado_en"?: string,"tenant_id": string,"trabajador_id": string
+                  }
+                  Update: {
+                    "alertas"?: NonNullable<Json>,"extra_dobles"?: number,"extra_triples"?: number,"horas_ordinarias"?: number,"periodo_fin"?: string,"periodo_inicio"?: string,"recalculado_en"?: string,"tenant_id"?: string,"trabajador_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                }
+          }
+          Views: {
+            [_ in never]: never
+          }
+          Functions: {
+            "regla_vigente":
+{ Args: { "p_clave": string,"p_fecha": string }; Returns: number
+                           }
+          }
+          Enums: {
+            [_ in never]: never
+          }
+          CompositeTypes: {
+            [_ in never]: never
+          }
+        },"jornada": {
+          Tables: {
+            "dia_laboral": {
+                  Row: {
+                    "entrada": string | null,"estado": string,"fecha": string,"minutos_trabajados": number,"pausas_min": number,"recalculado_en": string,"salida": string | null,"tenant_id": string,"trabajador_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "entrada"?: string | null,"estado": string,"fecha": string,"minutos_trabajados"?: number,"pausas_min"?: number,"recalculado_en"?: string,"salida"?: string | null,"tenant_id": string,"trabajador_id": string
+                  }
+                  Update: {
+                    "entrada"?: string | null,"estado"?: string,"fecha"?: string,"minutos_trabajados"?: number,"pausas_min"?: number,"recalculado_en"?: string,"salida"?: string | null,"tenant_id"?: string,"trabajador_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"evento": {
+                  Row: {
+                    "client_event_id": string | null,"creado_por": string,"dispositivo_id": string | null,"foto_hash": string | null,"foto_url": string | null,"fuera_de_geocerca": boolean | null,"hash": string,"hash_prev": string | null,"hash_version": number,"id": string,"lat": number | null,"lng": number | null,"motivo": string | null,"origen": string,"precision_m": number | null,"referencia_evento_id": string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado": string | null,"ts_dispositivo": string | null,"ts_servidor": string,"hash_de_evento": string | null
+                  }
+                  ComputedFields: "hash_de_evento"
+                  Insert: {
+                    "client_event_id"?: string | null,"creado_por": string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen": string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Update: {
+                    "client_event_id"?: string | null,"creado_por"?: string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen"?: string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id"?: string,"tipo"?: string,"trabajador_id"?: string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"evento_2026_11": {
+                  Row: {
+                    "client_event_id": string | null,"creado_por": string,"dispositivo_id": string | null,"foto_hash": string | null,"foto_url": string | null,"fuera_de_geocerca": boolean | null,"hash": string,"hash_prev": string | null,"hash_version": number,"id": string,"lat": number | null,"lng": number | null,"motivo": string | null,"origen": string,"precision_m": number | null,"referencia_evento_id": string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado": string | null,"ts_dispositivo": string | null,"ts_servidor": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_event_id"?: string | null,"creado_por": string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen": string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Update: {
+                    "client_event_id"?: string | null,"creado_por"?: string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen"?: string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id"?: string,"tipo"?: string,"trabajador_id"?: string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"evento_2026_12": {
+                  Row: {
+                    "client_event_id": string | null,"creado_por": string,"dispositivo_id": string | null,"foto_hash": string | null,"foto_url": string | null,"fuera_de_geocerca": boolean | null,"hash": string,"hash_prev": string | null,"hash_version": number,"id": string,"lat": number | null,"lng": number | null,"motivo": string | null,"origen": string,"precision_m": number | null,"referencia_evento_id": string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado": string | null,"ts_dispositivo": string | null,"ts_servidor": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_event_id"?: string | null,"creado_por": string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen": string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Update: {
+                    "client_event_id"?: string | null,"creado_por"?: string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen"?: string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id"?: string,"tipo"?: string,"trabajador_id"?: string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"evento_2027_01": {
+                  Row: {
+                    "client_event_id": string | null,"creado_por": string,"dispositivo_id": string | null,"foto_hash": string | null,"foto_url": string | null,"fuera_de_geocerca": boolean | null,"hash": string,"hash_prev": string | null,"hash_version": number,"id": string,"lat": number | null,"lng": number | null,"motivo": string | null,"origen": string,"precision_m": number | null,"referencia_evento_id": string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado": string | null,"ts_dispositivo": string | null,"ts_servidor": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_event_id"?: string | null,"creado_por": string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen": string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Update: {
+                    "client_event_id"?: string | null,"creado_por"?: string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen"?: string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id"?: string,"tipo"?: string,"trabajador_id"?: string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"evento_2027_02": {
+                  Row: {
+                    "client_event_id": string | null,"creado_por": string,"dispositivo_id": string | null,"foto_hash": string | null,"foto_url": string | null,"fuera_de_geocerca": boolean | null,"hash": string,"hash_prev": string | null,"hash_version": number,"id": string,"lat": number | null,"lng": number | null,"motivo": string | null,"origen": string,"precision_m": number | null,"referencia_evento_id": string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado": string | null,"ts_dispositivo": string | null,"ts_servidor": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_event_id"?: string | null,"creado_por": string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen": string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Update: {
+                    "client_event_id"?: string | null,"creado_por"?: string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen"?: string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id"?: string,"tipo"?: string,"trabajador_id"?: string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"evento_2027_03": {
+                  Row: {
+                    "client_event_id": string | null,"creado_por": string,"dispositivo_id": string | null,"foto_hash": string | null,"foto_url": string | null,"fuera_de_geocerca": boolean | null,"hash": string,"hash_prev": string | null,"hash_version": number,"id": string,"lat": number | null,"lng": number | null,"motivo": string | null,"origen": string,"precision_m": number | null,"referencia_evento_id": string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado": string | null,"ts_dispositivo": string | null,"ts_servidor": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_event_id"?: string | null,"creado_por": string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen": string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Update: {
+                    "client_event_id"?: string | null,"creado_por"?: string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen"?: string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id"?: string,"tipo"?: string,"trabajador_id"?: string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"evento_2027_04": {
+                  Row: {
+                    "client_event_id": string | null,"creado_por": string,"dispositivo_id": string | null,"foto_hash": string | null,"foto_url": string | null,"fuera_de_geocerca": boolean | null,"hash": string,"hash_prev": string | null,"hash_version": number,"id": string,"lat": number | null,"lng": number | null,"motivo": string | null,"origen": string,"precision_m": number | null,"referencia_evento_id": string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado": string | null,"ts_dispositivo": string | null,"ts_servidor": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_event_id"?: string | null,"creado_por": string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen": string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Update: {
+                    "client_event_id"?: string | null,"creado_por"?: string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen"?: string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id"?: string,"tipo"?: string,"trabajador_id"?: string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"evento_2027_05": {
+                  Row: {
+                    "client_event_id": string | null,"creado_por": string,"dispositivo_id": string | null,"foto_hash": string | null,"foto_url": string | null,"fuera_de_geocerca": boolean | null,"hash": string,"hash_prev": string | null,"hash_version": number,"id": string,"lat": number | null,"lng": number | null,"motivo": string | null,"origen": string,"precision_m": number | null,"referencia_evento_id": string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado": string | null,"ts_dispositivo": string | null,"ts_servidor": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_event_id"?: string | null,"creado_por": string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen": string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Update: {
+                    "client_event_id"?: string | null,"creado_por"?: string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen"?: string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id"?: string,"tipo"?: string,"trabajador_id"?: string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"evento_2027_06": {
+                  Row: {
+                    "client_event_id": string | null,"creado_por": string,"dispositivo_id": string | null,"foto_hash": string | null,"foto_url": string | null,"fuera_de_geocerca": boolean | null,"hash": string,"hash_prev": string | null,"hash_version": number,"id": string,"lat": number | null,"lng": number | null,"motivo": string | null,"origen": string,"precision_m": number | null,"referencia_evento_id": string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado": string | null,"ts_dispositivo": string | null,"ts_servidor": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_event_id"?: string | null,"creado_por": string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen": string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Update: {
+                    "client_event_id"?: string | null,"creado_por"?: string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen"?: string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id"?: string,"tipo"?: string,"trabajador_id"?: string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"evento_2027_07": {
+                  Row: {
+                    "client_event_id": string | null,"creado_por": string,"dispositivo_id": string | null,"foto_hash": string | null,"foto_url": string | null,"fuera_de_geocerca": boolean | null,"hash": string,"hash_prev": string | null,"hash_version": number,"id": string,"lat": number | null,"lng": number | null,"motivo": string | null,"origen": string,"precision_m": number | null,"referencia_evento_id": string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado": string | null,"ts_dispositivo": string | null,"ts_servidor": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_event_id"?: string | null,"creado_por": string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen": string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Update: {
+                    "client_event_id"?: string | null,"creado_por"?: string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen"?: string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id"?: string,"tipo"?: string,"trabajador_id"?: string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"evento_2027_08": {
+                  Row: {
+                    "client_event_id": string | null,"creado_por": string,"dispositivo_id": string | null,"foto_hash": string | null,"foto_url": string | null,"fuera_de_geocerca": boolean | null,"hash": string,"hash_prev": string | null,"hash_version": number,"id": string,"lat": number | null,"lng": number | null,"motivo": string | null,"origen": string,"precision_m": number | null,"referencia_evento_id": string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado": string | null,"ts_dispositivo": string | null,"ts_servidor": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_event_id"?: string | null,"creado_por": string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen": string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Update: {
+                    "client_event_id"?: string | null,"creado_por"?: string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen"?: string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id"?: string,"tipo"?: string,"trabajador_id"?: string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"evento_2027_09": {
+                  Row: {
+                    "client_event_id": string | null,"creado_por": string,"dispositivo_id": string | null,"foto_hash": string | null,"foto_url": string | null,"fuera_de_geocerca": boolean | null,"hash": string,"hash_prev": string | null,"hash_version": number,"id": string,"lat": number | null,"lng": number | null,"motivo": string | null,"origen": string,"precision_m": number | null,"referencia_evento_id": string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado": string | null,"ts_dispositivo": string | null,"ts_servidor": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_event_id"?: string | null,"creado_por": string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen": string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Update: {
+                    "client_event_id"?: string | null,"creado_por"?: string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen"?: string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id"?: string,"tipo"?: string,"trabajador_id"?: string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"evento_2027_10": {
+                  Row: {
+                    "client_event_id": string | null,"creado_por": string,"dispositivo_id": string | null,"foto_hash": string | null,"foto_url": string | null,"fuera_de_geocerca": boolean | null,"hash": string,"hash_prev": string | null,"hash_version": number,"id": string,"lat": number | null,"lng": number | null,"motivo": string | null,"origen": string,"precision_m": number | null,"referencia_evento_id": string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado": string | null,"ts_dispositivo": string | null,"ts_servidor": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_event_id"?: string | null,"creado_por": string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen": string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Update: {
+                    "client_event_id"?: string | null,"creado_por"?: string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen"?: string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id"?: string,"tipo"?: string,"trabajador_id"?: string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"evento_2027_11": {
+                  Row: {
+                    "client_event_id": string | null,"creado_por": string,"dispositivo_id": string | null,"foto_hash": string | null,"foto_url": string | null,"fuera_de_geocerca": boolean | null,"hash": string,"hash_prev": string | null,"hash_version": number,"id": string,"lat": number | null,"lng": number | null,"motivo": string | null,"origen": string,"precision_m": number | null,"referencia_evento_id": string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado": string | null,"ts_dispositivo": string | null,"ts_servidor": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "client_event_id"?: string | null,"creado_por": string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen": string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id": string,"tipo": string,"trabajador_id": string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Update: {
+                    "client_event_id"?: string | null,"creado_por"?: string,"dispositivo_id"?: string | null,"foto_hash"?: string | null,"foto_url"?: string | null,"fuera_de_geocerca"?: boolean | null,"hash"?: string,"hash_prev"?: string | null,"hash_version"?: number,"id"?: string,"lat"?: number | null,"lng"?: number | null,"motivo"?: string | null,"origen"?: string,"precision_m"?: number | null,"referencia_evento_id"?: string | null,"tenant_id"?: string,"tipo"?: string,"trabajador_id"?: string,"ts_declarado"?: string | null,"ts_dispositivo"?: string | null,"ts_servidor"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"sello_diario": {
+                  Row: {
+                    "fecha": string,"hash_raiz": string,"n_eventos": number,"proveedor_sello": string | null,"sellado_en": string,"tenant_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "fecha": string,"hash_raiz": string,"n_eventos": number,"proveedor_sello"?: string | null,"sellado_en"?: string,"tenant_id": string
+                  }
+                  Update: {
+                    "fecha"?: string,"hash_raiz"?: string,"n_eventos"?: number,"proveedor_sello"?: string | null,"sellado_en"?: string,"tenant_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                }
+          }
+          Views: {
+            [_ in never]: never
+          }
+          Functions: {
+            "asegurar_particiones_evento":
+{ Args: { "p_meses_adelante"?: number }; Returns: undefined
+                           },
+"calcular_hash_evento":
+{ Args: { "p_creado_por": string,"p_foto_hash": string,"p_hash_prev": string,"p_lat": number,"p_lng": number,"p_origen": string,"p_tenant_id": string,"p_tipo": string,"p_trabajador_id": string,"p_ts_dispositivo": string,"p_ts_servidor": string }; Returns: string
+                           },
+"calcular_hash_evento_v2":
+{ Args: { "p_creado_por": string,"p_foto_hash": string,"p_hash_prev": string,"p_lat": number,"p_lng": number,"p_origen": string,"p_tenant_id": string,"p_tipo": string,"p_trabajador_id": string,"p_ts_declarado": string,"p_ts_dispositivo": string,"p_ts_servidor": string }; Returns: string
+                           },
+"crear_particion_evento":
+{ Args: { "p_mes": string }; Returns: string
+                           },
+"distancia_m":
+{ Args: { "p_lat1": number,"p_lat2": number,"p_lng1": number,"p_lng2": number }; Returns: number
+                           },
+"fotos_por_purgar":
+{ Args: { "p_limite"?: number }; Returns: {
+              "ruta": string
+            }[]
+                           },
+"hash_de_evento":
+{ Args: { "p_evento": Omit<Database["jornada"]['Tables']["evento"]['Row'], Database["jornada"]['Tables']["evento"]['ComputedFields']> }; Returns: string
+                           },
+"hora_efectiva":
+{ Args: { "p_ts_dispositivo": string,"p_ts_servidor": string }; Returns: string
+                           } |
+{ Args: { "p_ts_declarado": string,"p_ts_dispositivo": string,"p_ts_servidor": string }; Returns: string
+                           },
+"kiosco_marcar":
+{ Args: { "p_client_event_id": string,"p_foto_hash"?: string,"p_pin"?: string,"p_qr"?: string,"p_token": string,"p_ts_dispositivo": string }; Returns: {
+              "duplicado": boolean,"evento_id": string,"foto_url": string,"nombre": string,"tipo": string,"trabajador_id": string,"ts_servidor": string
+            }[]
+                           },
+"marcajes_vigentes":
+{ Args: { "p_desde": string,"p_hasta": string,"p_tenant_id": string,"p_trabajador_id": string }; Returns: {
+              "corregido": boolean,"hora": string,"id": string,"tipo": string
+            }[]
+                           },
+"raiz_merkle":
+{ Args: { "p_hashes": (string)[] }; Returns: string
+                           },
+"raiz_merkle_dia":
+{ Args: { "p_fecha": string,"p_tenant_id": string }; Returns: {
+              "hash_raiz": string,"n_eventos": number
+            }[]
+                           },
+"recalcular_dia":
+{ Args: { "p_fecha": string,"p_tenant_id": string,"p_trabajador_id": string }; Returns: undefined
+                           },
+"recalcular_rango":
+{ Args: { "p_desde": string,"p_hasta": string,"p_tenant_id": string }; Returns: number
+                           },
+"sellar_dia":
+{ Args: { "p_fecha": string,"p_tenant_id": string }; Returns: {
+              "fecha": string,
+"hash_raiz": string,
+"n_eventos": number,
+"proveedor_sello": string | null,
+"sellado_en": string,
+"tenant_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "sello_diario"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"sellar_dias_pendientes":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
+"verificar_cadena":
+{ Args: { "p_desde"?: string,"p_hasta"?: string,"p_tenant_id": string,"p_trabajador_id": string }; Returns: {
+              "evento_roto_id": string,"evento_roto_ts": string,"integra": boolean,"motivo": string,"n_eventos": number
+            }[]
+                           },
+"verificar_sello":
+{ Args: { "p_fecha": string,"p_tenant_id": string }; Returns: boolean
+                           }
+          }
+          Enums: {
+            [_ in never]: never
+          }
+          CompositeTypes: {
+            [_ in never]: never
+          }
+        },"tenants": {
+          Tables: {
+            "centro_trabajo": {
+                  Row: {
+                    "creado_en": string,"direccion": string | null,"foto_en_kiosco": boolean,"foto_en_telefono": boolean,"id": string,"lat": number | null,"lng": number | null,"metodo_marcaje": string | null,"nombre": string,"pin_admin_hash": string | null,"radio_m": number | null,"tenant_id": string,"zona_horaria": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "creado_en"?: string,"direccion"?: string | null,"foto_en_kiosco"?: boolean,"foto_en_telefono"?: boolean,"id"?: string,"lat"?: number | null,"lng"?: number | null,"metodo_marcaje"?: string | null,"nombre": string,"pin_admin_hash"?: string | null,"radio_m"?: number | null,"tenant_id": string,"zona_horaria": string
+                  }
+                  Update: {
+                    "creado_en"?: string,"direccion"?: string | null,"foto_en_kiosco"?: boolean,"foto_en_telefono"?: boolean,"id"?: string,"lat"?: number | null,"lng"?: number | null,"metodo_marcaje"?: string | null,"nombre"?: string,"pin_admin_hash"?: string | null,"radio_m"?: number | null,"tenant_id"?: string,"zona_horaria"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "centro_trabajo_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "empresa"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"despacho_autorizacion": {
+                  Row: {
+                    "autorizado_en": string,"autorizado_por": string,"despacho_id": string,"id": string,"revocado_en": string | null,"tenant_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "autorizado_en"?: string,"autorizado_por": string,"despacho_id": string,"id"?: string,"revocado_en"?: string | null,"tenant_id": string
+                  }
+                  Update: {
+                    "autorizado_en"?: string,"autorizado_por"?: string,"despacho_id"?: string,"id"?: string,"revocado_en"?: string | null,"tenant_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "despacho_autorizacion_despacho_id_fkey"
+      columns: ["despacho_id"]
+isOneToOne: false
+      referencedRelation: "empresa"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "despacho_autorizacion_tenant_id_autorizado_por_fkey"
+      columns: ["tenant_id","autorizado_por"]
+isOneToOne: false
+      referencedRelation: "usuario"
+      referencedColumns: ["tenant_id","id"]
+    },{
+      foreignKeyName: "despacho_autorizacion_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "empresa"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"dispositivo": {
+                  Row: {
+                    "centro_id": string,"codigo_enlace_hash": string | null,"codigo_expira_en": string | null,"creado_en": string,"creado_por": string | null,"id": string,"nombre": string,"revocado_en": string | null,"tenant_id": string,"token_hash": string | null,"ultimo_uso": string | null,"usuario_id": string,"vinculado_en": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "centro_id": string,"codigo_enlace_hash"?: string | null,"codigo_expira_en"?: string | null,"creado_en"?: string,"creado_por"?: string | null,"id"?: string,"nombre"?: string,"revocado_en"?: string | null,"tenant_id": string,"token_hash"?: string | null,"ultimo_uso"?: string | null,"usuario_id": string,"vinculado_en"?: string | null
+                  }
+                  Update: {
+                    "centro_id"?: string,"codigo_enlace_hash"?: string | null,"codigo_expira_en"?: string | null,"creado_en"?: string,"creado_por"?: string | null,"id"?: string,"nombre"?: string,"revocado_en"?: string | null,"tenant_id"?: string,"token_hash"?: string | null,"ultimo_uso"?: string | null,"usuario_id"?: string,"vinculado_en"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "dispositivo_creado_por_fkey"
+      columns: ["creado_por"]
+isOneToOne: false
+      referencedRelation: "usuario"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dispositivo_tenant_id_centro_id_fkey"
+      columns: ["tenant_id","centro_id"]
+isOneToOne: false
+      referencedRelation: "centro_trabajo"
+      referencedColumns: ["tenant_id","id"]
+    },{
+      foreignKeyName: "dispositivo_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "empresa"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dispositivo_usuario_id_fkey"
+      columns: ["usuario_id"]
+isOneToOne: false
+      referencedRelation: "usuario"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"empresa": {
+                  Row: {
+                    "creado_en": string,"es_despacho": boolean,"estado": string,"id": string,"jurisdiccion": string,"onboarding_completado_en": string | null,"plan": string,"razon_social": string,"rfc": string | null,"sector": string | null,"tamano": string,"zona_horaria": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "creado_en"?: string,"es_despacho"?: boolean,"estado"?: string,"id"?: string,"jurisdiccion": string,"onboarding_completado_en"?: string | null,"plan"?: string,"razon_social": string,"rfc"?: string | null,"sector"?: string | null,"tamano": string,"zona_horaria"?: string
+                  }
+                  Update: {
+                    "creado_en"?: string,"es_despacho"?: boolean,"estado"?: string,"id"?: string,"jurisdiccion"?: string,"onboarding_completado_en"?: string | null,"plan"?: string,"razon_social"?: string,"rfc"?: string | null,"sector"?: string | null,"tamano"?: string,"zona_horaria"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"horario": {
+                  Row: {
+                    "creado_en": string,"descanso_semanal": (number)[],"dias": NonNullable<Json>,"hora_entrada": string,"hora_salida": string,"id": string,"tenant_id": string,"trabajador_id": string,"vigente_desde": string,"vigente_hasta": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "creado_en"?: string,"descanso_semanal"?: (number)[],"dias": NonNullable<Json>,"hora_entrada": string,"hora_salida": string,"id"?: string,"tenant_id": string,"trabajador_id": string,"vigente_desde": string,"vigente_hasta"?: string | null
+                  }
+                  Update: {
+                    "creado_en"?: string,"descanso_semanal"?: (number)[],"dias"?: NonNullable<Json>,"hora_entrada"?: string,"hora_salida"?: string,"id"?: string,"tenant_id"?: string,"trabajador_id"?: string,"vigente_desde"?: string,"vigente_hasta"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "horario_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "empresa"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "horario_tenant_id_trabajador_id_fkey"
+      columns: ["tenant_id","trabajador_id"]
+isOneToOne: false
+      referencedRelation: "trabajador"
+      referencedColumns: ["tenant_id","id"]
+    }
+                  ]
+                },"intento_pin": {
+                  Row: {
+                    "bloqueado_hasta": string | null,"fallidos": number,"trabajador_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bloqueado_hasta"?: string | null,"fallidos"?: number,"trabajador_id": string
+                  }
+                  Update: {
+                    "bloqueado_hasta"?: string | null,"fallidos"?: number,"trabajador_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "intento_pin_trabajador_id_fkey"
+      columns: ["trabajador_id"]
+isOneToOne: true
+      referencedRelation: "trabajador"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"invitacion": {
+                  Row: {
+                    "creado_en": string,"creado_por": string | null,"expira_en": string,"id": string,"tenant_id": string,"token_hash": string,"trabajador_id": string,"usada_en": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "creado_en"?: string,"creado_por"?: string | null,"expira_en"?: string,"id"?: string,"tenant_id": string,"token_hash": string,"trabajador_id": string,"usada_en"?: string | null
+                  }
+                  Update: {
+                    "creado_en"?: string,"creado_por"?: string | null,"expira_en"?: string,"id"?: string,"tenant_id"?: string,"token_hash"?: string,"trabajador_id"?: string,"usada_en"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invitacion_creado_por_fkey"
+      columns: ["creado_por"]
+isOneToOne: false
+      referencedRelation: "usuario"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invitacion_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "empresa"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invitacion_tenant_id_trabajador_id_fkey"
+      columns: ["tenant_id","trabajador_id"]
+isOneToOne: false
+      referencedRelation: "trabajador"
+      referencedColumns: ["tenant_id","id"]
+    }
+                  ]
+                },"limite_api": {
+                  Row: {
+                    "peticiones": number,"tenant_id": string,"ventana": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "peticiones"?: number,"tenant_id": string,"ventana": string
+                  }
+                  Update: {
+                    "peticiones"?: number,"tenant_id"?: string,"ventana"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "limite_api_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "empresa"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"trabajador": {
+                  Row: {
+                    "centro_id": string,"creado_en": string,"curp_cifrado": string | null,"fecha_alta": string,"fecha_baja": string | null,"id": string,"menor_de_edad": boolean,"metodo_marcaje": string,"nombre": string,"nss_cifrado": string | null,"pin_hash": string | null,"puesto": string | null,"qr_token_hash": string | null,"tenant_id": string,"tipo_jornada": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "centro_id": string,"creado_en"?: string,"curp_cifrado"?: string | null,"fecha_alta"?: string,"fecha_baja"?: string | null,"id"?: string,"menor_de_edad"?: boolean,"metodo_marcaje"?: string,"nombre": string,"nss_cifrado"?: string | null,"pin_hash"?: string | null,"puesto"?: string | null,"qr_token_hash"?: string | null,"tenant_id": string,"tipo_jornada"?: string
+                  }
+                  Update: {
+                    "centro_id"?: string,"creado_en"?: string,"curp_cifrado"?: string | null,"fecha_alta"?: string,"fecha_baja"?: string | null,"id"?: string,"menor_de_edad"?: boolean,"metodo_marcaje"?: string,"nombre"?: string,"nss_cifrado"?: string | null,"pin_hash"?: string | null,"puesto"?: string | null,"qr_token_hash"?: string | null,"tenant_id"?: string,"tipo_jornada"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "trabajador_tenant_id_centro_id_fkey"
+      columns: ["tenant_id","centro_id"]
+isOneToOne: false
+      referencedRelation: "centro_trabajo"
+      referencedColumns: ["tenant_id","id"]
+    },{
+      foreignKeyName: "trabajador_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "empresa"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"usuario": {
+                  Row: {
+                    "activo": boolean,"auth_user_id": string | null,"centro_id": string | null,"creado_en": string,"id": string,"rol": string,"tenant_id": string,"trabajador_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "activo"?: boolean,"auth_user_id"?: string | null,"centro_id"?: string | null,"creado_en"?: string,"id"?: string,"rol": string,"tenant_id": string,"trabajador_id"?: string | null
+                  }
+                  Update: {
+                    "activo"?: boolean,"auth_user_id"?: string | null,"centro_id"?: string | null,"creado_en"?: string,"id"?: string,"rol"?: string,"tenant_id"?: string,"trabajador_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "usuario_tenant_id_centro_id_fkey"
+      columns: ["tenant_id","centro_id"]
+isOneToOne: false
+      referencedRelation: "centro_trabajo"
+      referencedColumns: ["tenant_id","id"]
+    },{
+      foreignKeyName: "usuario_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "empresa"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "usuario_tenant_id_trabajador_id_fkey"
+      columns: ["tenant_id","trabajador_id"]
+isOneToOne: false
+      referencedRelation: "trabajador"
+      referencedColumns: ["tenant_id","id"]
+    }
+                  ]
+                }
+          }
+          Views: {
+            [_ in never]: never
+          }
+          Functions: {
+            "aceptar_invitacion":
+{ Args: { "p_auth_user_id": string,"p_pin": string,"p_token": string }; Returns: string
+                           },
+"centro_de_trabajador":
+{ Args: { "p_trabajador_id": string }; Returns: string
+                           },
+"cifrar":
+{ Args: { "p_tenant_id": string,"p_texto": string }; Returns: string
+                           },
+"claims_token_acceso":
+{ Args: { "event": Json }; Returns: Json
+                           },
+"consumir_limite_api":
+{ Args: { "p_max"?: number,"p_ventana_seg"?: number }; Returns: boolean
+                           },
+"crear_empresa":
+{ Args: { "jurisdiccion_sugerida": string,"razon_social": string,"rfc": string,"sector": string,"tamano": string }; Returns: string
+                           },
+"crear_horario":
+{ Args: { "descanso_semanal"?: (number)[],"dias": Json,"hora_entrada": string,"hora_salida": string,"trabajador_id": string,"vigente_desde": string }; Returns: string
+                           },
+"crear_invitacion":
+{ Args: { "trabajador_id": string }; Returns: string
+                           },
+"crear_trabajador":
+{ Args: { "centro_id": string,"curp"?: string,"descanso_semanal"?: (number)[],"dias"?: Json,"hora_entrada"?: string,"hora_salida"?: string,"menor_de_edad"?: boolean,"nombre": string,"nss"?: string,"puesto"?: string,"tipo_jornada"?: string }; Returns: {
+              "id": string,"pin": string,"qr_token": string
+            }[]
+                           },
+"cuenta_de_empleado":
+{ Args: { "p_correo": string }; Returns: string
+                           },
+"descifrar":
+{ Args: { "p_dato": string,"p_tenant_id": string }; Returns: string
+                           },
+"desvincular_dispositivo":
+{ Args: { "p_pin_admin": string,"p_token": string }; Returns: boolean
+                           },
+"dispositivo_por_token":
+{ Args: { "p_token": string }; Returns: {
+              "centro_id": string,
+"codigo_enlace_hash": string | null,
+"codigo_expira_en": string | null,
+"creado_en": string,
+"creado_por": string | null,
+"id": string,
+"nombre": string,
+"revocado_en": string | null,
+"tenant_id": string,
+"token_hash": string | null,
+"ultimo_uso": string | null,
+"usuario_id": string,
+"vinculado_en": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "dispositivo"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"es_admin_de":
+{ Args: { "p_tenant_id": string }; Returns: boolean
+                           },
+"es_dueno_de":
+{ Args: { "p_tenant_id": string }; Returns: boolean
+                           },
+"es_supervisor_de_centro":
+{ Args: { "p_centro_id": string,"p_tenant_id": string }; Returns: boolean
+                           },
+"generar_codigo_enlace":
+{ Args: { "centro_id": string,"nombre"?: string }; Returns: string
+                           },
+"generar_pin":
+{ Args: { "p_centro_id": string }; Returns: string
+                           },
+"generar_pin_admin":
+{ Args: { "centro_id": string }; Returns: string
+                           },
+"generar_token":
+{ Args: { "p_bytes"?: number }; Returns: string
+                           },
+"hash_token":
+{ Args: { "p_token": string }; Returns: string
+                           },
+"invitacion_info":
+{ Args: { "p_token": string }; Returns: {
+              "empresa": string,"nombre": string
+            }[]
+                           },
+"jwt_centro_id":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"jwt_rol":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"jwt_tenant_id":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"jwt_trabajador_id":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"jwt_usuario_id":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"kiosco_estado":
+{ Args: { "p_token": string }; Returns: {
+              "centro": string,"empresa": string,"foto": boolean,"zona_horaria": string
+            }[]
+                           },
+"llave_cifrado":
+{ Args: { "p_tenant_id": string }; Returns: string
+                           },
+"puede_ver_trabajador":
+{ Args: { "p_tenant_id": string,"p_trabajador_id": string }; Returns: boolean
+                           },
+"regenerar_credenciales":
+{ Args: { "trabajador_id": string }; Returns: {
+              "pin": string,"qr_token": string
+            }[]
+                           },
+"tenant_autorizado":
+{ Args: { "p_tenant_id": string }; Returns: boolean
+                           },
+"verificar_pin":
+{ Args: { "p_pin": string,"p_trabajador_id": string }; Returns: boolean
+                           },
+"verificar_pin_de_cuenta":
+{ Args: { "p_auth_user_id": string,"p_pin": string }; Returns: boolean
+                           },
+"vincular_dispositivo":
+{ Args: { "p_codigo": string }; Returns: {
+              "centro": string,"empresa": string,"foto": boolean,"token": string,"zona_horaria": string
+            }[]
+                           }
+          }
+          Enums: {
+            [_ in never]: never
+          }
+          CompositeTypes: {
+            [_ in never]: never
+          }
+        }
+}
+
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "calculo">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never
+
+export const Constants = {
+  "calculo": {
+          Enums: {
+            
+          }
+        },"jornada": {
+          Enums: {
+            
+          }
+        },"tenants": {
+          Enums: {
+            
+          }
+        }
+} as const

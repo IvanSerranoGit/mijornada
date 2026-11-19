@@ -1,8 +1,5 @@
-// Marcador de posición: la interfaz se construye en el sprint 2.
+import { Kiosco } from "./Kiosco.tsx";
+
 export default function HomePage() {
-  return (
-    <main className="flex min-h-screen items-center justify-center p-8">
-      <h1 className="text-2xl font-semibold">Mi Jornada · Kiosco</h1>
-    </main>
-  );
+  return <Kiosco />;
 }

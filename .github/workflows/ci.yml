@@ -16,7 +16,7 @@ jobs:
   verificar:
     name: Lint, tipos y pruebas
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -38,7 +38,29 @@ jobs:
         with:
           version: 3.2.0
 
-      # `supabase start` aplica las migraciones y los seeds desde cero.
-      - run: supabase start
+      # `supabase start` aplica las migraciones y los seeds desde cero. Sus puertos
+      # (54321-54324) caen en el rango efímero de Linux y a veces el runner ya tiene
+      # uno ocupado: se reintenta.
+      - name: supabase start
+        run: |
+          for intento in 1 2 3; do
+            if supabase start; then exit 0; fi
+            supabase stop --no-backup || true
+            sleep 5
+          done
+          exit 1
 
       - run: pnpm test
+
+      # Punta a punta: onboarding, PWA sin red y kiosco contra las apps compiladas.
+      - run: pnpm env:local
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium webkit
+      - run: pnpm test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: videos-e2e
+          path: e2e/resultados
+          retention-days: 14

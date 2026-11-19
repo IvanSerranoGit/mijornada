@@ -33,7 +33,9 @@ async function readChain(tx: Tx, tenant: Tenant, trabajadorId: string): Promise<
            lat::text as lat,
            lng::text as lng,
            foto_hash as "fotoHash",
-           creado_por as "creadoPor"
+           creado_por as "creadoPor",
+           hash_version as "hashVersion",
+           to_char(ts_declarado at time zone 'UTC', ${sql.unsafe(TS)}) as "tsDeclarado"
     from jornada.evento
     where tenant_id = ${tenant.tenantId} and trabajador_id = ${trabajadorId}
     order by ts_servidor, id`;
@@ -163,8 +165,10 @@ describe("inmutabilidad", () => {
       const t = await createTenant(tx, "Uno");
       const original = await insertEvent(tx, t, t.trabajadorA);
       const correccion = (trabajadorId: string, referencia: string) => (sp: Tx) => sp`
-        insert into jornada.evento (tenant_id, trabajador_id, tipo, origen, creado_por, motivo, referencia_evento_id)
-        values (${t.tenantId}, ${trabajadorId}, 'correccion', 'incidencia', ${t.dueno.usuario_id}, 'Olvidó marcar', ${referencia})`;
+        insert into jornada.evento
+          (tenant_id, trabajador_id, tipo, origen, creado_por, motivo, referencia_evento_id, ts_declarado)
+        values (${t.tenantId}, ${trabajadorId}, 'correccion', 'incidencia', ${t.dueno.usuario_id},
+                'Marcó tarde', ${referencia}, now() - interval '1 hour')`;
 
       await correccion(t.trabajadorA, original)(tx);
       expect(await expectPgError(tx, correccion(t.trabajadorB, original))).toMatch(

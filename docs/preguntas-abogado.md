@@ -90,15 +90,30 @@ Estados: **Abierta** · **Respondida** (anotar fecha, respuesta y qué se cambi�
 
 ### 9. Qué hora cuenta cuando se corrige una marca
 
-- **Estado:** Abierta
-- **Pregunta:** Si un trabajador olvidó marcar y el patrón aprueba una corrección días después,
-  ¿qué hora vale para el cálculo: la que declara la corrección o la del momento en que se
+- **Estado:** Respondida provisionalmente (19-nov-2026, decisión del producto; falta la opinión del
+  abogado)
+- **Pregunta:** Si un trabajador olvidó marcar o marcó mal y se aprueba una corrección días
+  después, ¿qué hora vale para el cálculo: la que declara la corrección o la del momento en que se
   registró? ¿Debe constar la conformidad del trabajador con la hora corregida?
-- **Qué asume hoy el sistema:** nada todavía. La marca original nunca se modifica y la corrección
-  es un evento nuevo con motivo y autor, pero el modelo no tiene un campo propio para la hora
-  corregida. Esta respuesta bloquea el cálculo de días laborales.
-- **Dónde cambia:** una columna nueva en `jornada.evento` (migración) y el proceso que llena
-  `jornada.dia_laboral`.
+- **Qué asume hoy el sistema:**
+  - Vale la **hora declarada** (`jornada.evento.ts_declarado`): la hora en que se afirma que
+    ocurrió la entrada o la salida. La hora en que se registró la corrección queda aparte
+    (`ts_servidor`). La marca original nunca se modifica.
+  - El reporte debe mostrar siempre las dos horas, el motivo y quién aprobó.
+  - **Conformidad del trabajador:** si la corrección la pide el propio trabajador, nace con su
+    conformidad; si la abre el patrón, queda "sin conformidad del trabajador" hasta que él la
+    acepte desde su celular (`cumplimiento.incidencia.aceptada_por`, `aceptada_en`).
+  - La hora declarada entra al hash encadenado (versión 2), así que tampoco se puede alterar sin
+    rastro.
+- **Qué cambiaría si el abogado dice otra cosa:**
+  - Si la hora que vale es la del registro: `jornada.hora_efectiva` deja de usar `ts_declarado`
+    (una función) y se recalculan los días con `jornada.recalcular_rango`. No se pierde nada: las
+    dos horas están guardadas.
+  - Si la conformidad debe ser obligatoria para aprobar: `cumplimiento.resolver_incidencia`
+    rechazaría las incidencias sin `aceptada_en`.
+  - Si se requiere firma y no un clic: se agrega el método de aceptación, como en los
+    consentimientos.
+- **Dónde está:** migración `20261119000022_hora_declarada.sql`.
 
 ### 10. Marcas que llegan tarde por falta de internet
 
@@ -106,11 +121,11 @@ Estados: **Abierta** · **Respondida** (anotar fecha, respuesta y qué se cambi�
 - **Pregunta:** Cuando el dispositivo no tenía red, la marca se guarda con la hora del dispositivo
   y se envía después. ¿Es aceptable usar la hora del dispositivo para el cálculo si la marca llega
   dentro de 24 horas? ¿Y si llega después?
-- **Qué asume hoy el sistema:** guarda las dos horas (dispositivo y servidor). Lo que llega más de
-  24 h después de la hora del dispositivo se acepta y queda marcado como "sincronización tardía".
-  Falta definir cuál de las dos horas usa el cálculo.
-- **Dónde cambia:** el trigger `jornada.encadenar_evento` (umbral de 24 h) y el proceso que llena
-  `jornada.dia_laboral`.
+- **Qué asume hoy el sistema:** guarda las dos horas (dispositivo y servidor) y para calcular el
+  día laboral usa la del dispositivo cuando existe, sin importar cuánto tarde en llegar. Lo que
+  llega más de 24 h después se acepta y queda marcado como "sincronización tardía".
+- **Dónde cambia:** la función `jornada.hora_efectiva` (qué hora cuenta) y el trigger
+  `jornada.encadenar_evento` (umbral de 24 h).
 
 ### 11. Trabajador que no acepta el convenio de registro
 
@@ -162,3 +177,24 @@ Estados: **Abierta** · **Respondida** (anotar fecha, respuesta y qué se cambi�
 - **Qué asume hoy el sistema:** reporte en PDF y CSV; los formatos nuevos se agregan como
   exportadores sin tocar el registro.
 - **Dónde cambia:** dominios `cumplimiento` e `integraciones`.
+
+## Acceso y evidencia (sprint 2)
+
+### 16. PIN de 4 dígitos como identificación del trabajador
+
+- **Estado:** Abierta
+- **Pregunta:** El trabajador se identifica con un PIN de 4 dígitos (en el kiosco) o con correo y
+  PIN (en su celular). ¿Es suficiente para atribuirle una marca ante una inspección o un juicio, o
+  conviene exigir algo más (foto obligatoria, contraseña propia)?
+- **Qué asume hoy el sistema:** el PIN basta; la foto es opcional por centro y se bloquea 15
+  minutos tras 5 intentos fallidos.
+- **Dónde cambia:** configuración por centro (`foto_en_kiosco`, `foto_en_telefono`).
+
+### 17. Marcas fuera de la geocerca
+
+- **Estado:** Abierta
+- **Pregunta:** Si un trabajador marca desde su celular fuera del radio del centro de trabajo, la
+  marca se registra y queda anotada como "fuera de geocerca". ¿Esa anotación puede usarse en su
+  contra, o debe informarse expresamente en el aviso de privacidad y en el convenio?
+- **Qué asume hoy el sistema:** nunca bloquea la marca; solo la anota.
+- **Dónde cambia:** textos de consentimiento (sprint 3) y `jornada.evento.fuera_de_geocerca`.

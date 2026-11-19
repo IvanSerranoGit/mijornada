@@ -77,9 +77,12 @@ async function seedTenant(tx: Tx, nombre: string): Promise<Seeded> {
            values (${documentoId}, ${id}, 'convenio_registro', 1, ${hash}, '2026-01-01')`;
   await tx`insert into cumplimiento.consentimiento (tenant_id, trabajador_id, documento_id, metodo)
            values (${id}, ${t.trabajadorA}, ${documentoId}, 'clic'), (${id}, ${t.trabajadorB}, ${documentoId}, 'clic')`;
-  await tx`insert into cumplimiento.incidencia (id, tenant_id, trabajador_id, fecha, tipo, motivo, solicitado_por)
-           values (${incidenciaA}, ${id}, ${t.trabajadorA}, '2026-11-02', 'olvido', 'Olvidó marcar', ${owner}),
-                  (${incidenciaB}, ${id}, ${t.trabajadorB}, '2026-11-02', 'olvido', 'Olvidó marcar', ${owner})`;
+  await tx`insert into cumplimiento.incidencia
+             (id, tenant_id, trabajador_id, fecha, tipo, motivo, solicitado_por, tipo_marcaje, ts_declarado)
+           values (${incidenciaA}, ${id}, ${t.trabajadorA}, '2026-11-02', 'olvido', 'Olvidó marcar', ${owner},
+                   'salida', '2026-11-02T18:00:00-06:00'),
+                  (${incidenciaB}, ${id}, ${t.trabajadorB}, '2026-11-02', 'olvido', 'Olvidó marcar', ${owner},
+                   'salida', '2026-11-02T18:00:00-06:00')`;
   await tx`insert into cumplimiento.reporte (id, tenant_id, tipo, rango, hash_contenido, solicitante, centro_id)
            values (${reporteId}, ${id}, 'inspeccion', '[2026-11-01,2026-12-01)', ${hash}, ${owner}, null),
                   (${reporteCentroA}, ${id}, 'periodo', '[2026-11-01,2026-12-01)', ${hash}, ${owner}, ${t.centroA})`;
@@ -162,10 +165,12 @@ describe("aislamiento entre tenants", () => {
         const updated =
           await tx`update tenants.trabajador set nombre = 'Alterado' where tenant_id = ${dos.tenantId}`;
         expect(updated.count).toBe(0);
-        const resolved = await tx`
-          update cumplimiento.incidencia set estado = 'aprobada', resuelto_por = ${uno.dueno.usuario_id}, resuelto_en = now()
-          where id = ${dos.incidenciaA}`;
-        expect(resolved.count).toBe(0);
+        expect(
+          await expectPgError(
+            tx,
+            (sp) => sp`select cumplimiento.resolver_incidencia(${dos.incidenciaA}, true)`,
+          ),
+        ).toMatch(/no puedes resolverla/);
       });
 
       const [row] = await tx<
@@ -291,12 +296,11 @@ describe("permisos por rol", () => {
         const reportes = await tx<{ id: string }[]>`select id from cumplimiento.reporte`;
         expect(reportes.map((r) => r.id)).toEqual([uno.reporteCentroA]);
 
-        const resolve = (incidenciaId: string) => tx`
-          update cumplimiento.incidencia
-          set estado = 'aprobada', resuelto_por = ${uno.supervisorA.usuario_id}, resuelto_en = now()
-          where id = ${incidenciaId}`;
-        expect((await resolve(uno.incidenciaA)).count).toBe(1);
-        expect((await resolve(uno.incidenciaB)).count).toBe(0);
+        const resolve = (incidenciaId: string) => (sp: Tx) =>
+          sp`select cumplimiento.resolver_incidencia(${incidenciaId}, true)`;
+        await resolve(uno.incidenciaA)(tx);
+        expect(await expectPgError(tx, resolve(uno.incidenciaB))).toMatch(/no puedes resolverla/);
+        expect(await expectPgError(tx, resolve(uno.incidenciaA))).toMatch(/ya fue resuelta/);
 
         expect(await countRows(tx, "integraciones.conector")).toBe(0);
         expect(await countRows(tx, "auditoria.bitacora_admin")).toBe(0);
@@ -349,9 +353,21 @@ describe("permisos por rol", () => {
 
         await tx`insert into cumplimiento.incidencia (tenant_id, trabajador_id, fecha, tipo, motivo, solicitado_por)
                  values (${uno.tenantId}, ${uno.trabajadorA}, '2026-11-03', 'permiso', 'Cita médica', ${yo.usuario_id})`;
-        const resolved = await tx`
-          update cumplimiento.incidencia set estado = 'aprobada', resuelto_por = ${yo.usuario_id}, resuelto_en = now()`;
-        expect(resolved.count).toBe(0);
+        // No puede aprobarse a sí mismo: ni por la función ni cambiando el estado directo.
+        const [mia] = await tx<{ id: string }[]>`
+          select id from cumplimiento.incidencia where solicitado_por = ${yo.usuario_id}`;
+        expect(
+          await expectPgError(
+            tx,
+            (sp) => sp`select cumplimiento.resolver_incidencia(${mia?.id ?? ""}, true)`,
+          ),
+        ).toMatch(/no puedes resolverla/);
+        expect(
+          await expectPgError(
+            tx,
+            (sp) => sp`update cumplimiento.incidencia set estado = 'aprobada'`,
+          ),
+        ).toMatch(/permission denied/);
       });
     });
   });

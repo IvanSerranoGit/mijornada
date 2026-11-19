@@ -1,0 +1,95 @@
+/*
+ * Tema de Mi Jornada para Tailwind v4. Los nombres son los de las variables del
+ * archivo de Figma "Mi Jornada — Identidad".
+ *
+ * Uso en una app:
+ *   @import "tailwindcss";
+ *   @import "@mijornada/ui/theme.css";
+ *   @source "../../../packages/ui/src";
+ *
+ * Las fuentes (--font-space-grotesk y --font-inter) las define cada app con
+ * next/font/google.
+ */
+
+@theme {
+  /* Fondos */
+  --color-bg-page: #fdfcf9;
+  --color-bg-surface: #ffffff;
+  --color-bg-subtle: #f3f4f6;
+  --color-bg-brand: #0f766e;
+  --color-bg-brand-hover: #115e59;
+  --color-bg-brand-soft: #f0fdfa;
+  --color-bg-accent: #a3e635;
+  --color-bg-inverse: #111827;
+
+  /* Texto */
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-brand: #0f766e;
+  --color-text-on-brand: #ffffff;
+  --color-text-on-accent: #111827;
+  --color-text-inverse: #ffffff;
+
+  /* Bordes */
+  --color-border-default: #e5e7eb;
+  --color-border-strong: #d1d5db;
+  --color-border-brand: #0d9488;
+
+  /* Estados */
+  --color-status-good: #0d9488;
+  --color-status-good-soft: #f0fdfa;
+  --color-status-warning: #f59e0b;
+  --color-status-warning-soft: #fef3c7;
+  --color-status-warning-text: #b45309;
+  --color-status-critical: #dc2626;
+  --color-status-critical-soft: #fee2e2;
+
+  /* Radios */
+  --radio-sm: 6px;
+  --radio-md: 12px;
+  --radio-lg: 20px;
+  --radio-full: 999px;
+
+  /* Espacios */
+  --espacio-2xs: 4px;
+  --espacio-xs: 8px;
+  --espacio-sm: 12px;
+  --espacio-md: 16px;
+  --espacio-lg: 24px;
+  --espacio-xl: 32px;
+  --espacio-2xl: 48px;
+
+  /* Tipografía: Space Grotesk para títulos y horas, Inter para el cuerpo. */
+  --font-titulo: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-cuerpo: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --text-display: 44px;
+  --text-display--line-height: 48px;
+  --text-titulo-1: 32px;
+  --text-titulo-1--line-height: 38px;
+  --text-titulo-2: 24px;
+  --text-titulo-2--line-height: 30px;
+  --text-titulo-3: 18px;
+  --text-titulo-3--line-height: 24px;
+  --text-hora-grande: 56px;
+  --text-hora-grande--line-height: 60px;
+  --text-cuerpo: 16px;
+  --text-cuerpo--line-height: 24px;
+  --text-pequeno: 14px;
+  --text-pequeno--line-height: 20px;
+  --text-etiqueta: 12px;
+  --text-etiqueta--line-height: 16px;
+  --text-etiqueta--letter-spacing: 0.06em;
+  --text-nota: 12px;
+  --text-nota--line-height: 16px;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-bg-page);
+    color: var(--color-text-primary);
+    font-family: var(--font-cuerpo);
+    font-size: var(--text-cuerpo);
+    line-height: var(--text-cuerpo--line-height);
+  }
+}

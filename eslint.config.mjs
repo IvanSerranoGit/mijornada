@@ -17,6 +17,7 @@ export default defineConfig(
     "**/coverage/**",
     "**/next-env.d.ts",
     "supabase/**",
+    "**/database.types.ts",
   ]),
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
@@ -42,6 +43,11 @@ export default defineConfig(
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs["core-web-vitals"].rules,
     },
+  },
+  {
+    // En las pruebas se tipa la respuesta esperada con un genérico (`api<T>()`).
+    files: ["**/test/**/*.ts"],
+    rules: { "@typescript-eslint/no-unnecessary-type-parameters": "off" },
   },
   prettier,
 );

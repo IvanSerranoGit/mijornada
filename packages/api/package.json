@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@mijornada/db": "workspace:*",
-    "@mijornada/dominio": "workspace:*"
+    "@mijornada/dominio": "workspace:*",
+    "@supabase/supabase-js": "^2.119.0",
+    "zod": "^4.6.7"
   }
 }

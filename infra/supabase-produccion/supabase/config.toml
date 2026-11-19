@@ -1,0 +1,29 @@
+# Configuración del proyecto de Supabase en producción (mijornada, us-east-1).
+# Solo declara lo que debe diferir de los valores por defecto de la nube; lo demás
+# no se toca. Se revisa y aplica con:
+#
+#   supabase config diff --workdir infra/supabase-produccion --remote=<ref>
+#   supabase config push --workdir infra/supabase-produccion --remote=<ref>
+#
+# (supabase/config.toml, en la raíz, es la configuración del entorno LOCAL.)
+project_id = "mijornada"
+
+[api]
+# Esquemas que expone la API: los que consumen web, PWA y kiosco.
+schemas = ["public", "graphql_public", "tenants", "jornada", "calculo"]
+
+[auth]
+site_url = "https://mijornada.xyz"
+additional_redirect_urls = ["https://mijornada.xyz/auth/callback"]
+
+# Agrega tenant_id, rol, usuario_id, centro_id y trabajador_id al JWT.
+[auth.hook.custom_access_token]
+enabled = true
+uri = "pg-functions://postgres/tenants/claims_token_acceso"
+
+# PROVISIONAL (piloto): la confirmación de correo está apagada porque el correo
+# incluido de Supabase no entrega a direcciones externas. Volver a encenderla
+# (quitar este bloque y `supabase config push`) cuando el SMTP de Resend esté
+# verificado.
+[auth.email]
+enable_confirmations = false

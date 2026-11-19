@@ -5,9 +5,12 @@ $ORIGIN mijornada.xyz.
 $TTL 300
 
 ; --- Vercel (proyecto mijornada) ---------------------------------------------
-@       IN  A      216.150.1.1
-@       IN  A      216.150.16.1
+; Dominio canónico: mijornada.xyz (sin www). El apex va como CNAME; Cloudflare lo
+; aplana (CNAME flattening). www redirige con 308 al apex desde Vercel.
+@       IN  CNAME  44e434c76f92f79c.vercel-dns-016.com.
 www     IN  CNAME  44e434c76f92f79c.vercel-dns-016.com.
+; Kiosco: proyecto mijornada-kiosco en Vercel.
+kiosco  IN  CNAME  7d5267578a09c6f0.vercel-dns-016.com.
 
 ; --- Correo: placeholders, descomentar al elegir proveedor de envío ----------
 ; SPF: quién puede enviar correo a nombre del dominio.
