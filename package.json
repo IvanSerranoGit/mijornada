@@ -18,11 +18,14 @@
     "db:migrate": "supabase migration up",
     "db:reset": "supabase db reset",
     "db:seed": "pnpm --filter @mijornada/db seed",
-    "db:types": "supabase gen types typescript --local --schema tenants,jornada,calculo > packages/db/src/database.types.ts"
+    "db:types": "supabase gen types typescript --local --schema tenants,jornada,calculo > packages/db/src/database.types.ts",
+    "env:local": "./scripts/env-local.sh",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@next/eslint-plugin-next": "^16.4.6",
+    "@playwright/test": "^1.65.1",
     "@types/node": "^24.19.2",
     "eslint": "^10.15.0",
     "eslint-config-prettier": "^10.1.8",

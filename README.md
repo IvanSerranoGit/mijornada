@@ -13,25 +13,38 @@ proyecto y sus principios están en [`CLAUDE.md`](./CLAUDE.md).
 
 ```bash
 pnpm install
-cp .env.example .env.local   # completa las llaves con `supabase status -o env`
 pnpm db:start                # Postgres, Auth y Storage en Docker
+pnpm env:local               # escribe apps/*/.env.local con las llaves locales
 pnpm db:reset                # aplica migraciones y seeds desde cero
 pnpm dev                     # web en :3000, kiosco en :3001
 ```
 
-Supabase Studio queda en http://127.0.0.1:54323. Para detener el entorno: `pnpm db:stop`.
+Supabase Studio queda en http://127.0.0.1:54323 y los correos de prueba (enlace mágico) en
+http://127.0.0.1:54324. Para detener el entorno: `pnpm db:stop`. Si cambias `supabase/config.toml`,
+reinicia con `pnpm db:stop && pnpm db:start`.
+
+Recorrido para probar a mano:
+
+1. http://localhost:3000/registro → crea la cuenta y sigue el alta en 6 pasos. Anota el PIN de la
+   persona y el código de enlace del kiosco.
+2. En el panel, **Invitar a marcar desde su celular** genera el enlace de la PWA del trabajador
+   (`/invitacion/…`); se activa con un correo y el PIN. La PWA vive en `/app`.
+3. http://localhost:3001 → teclea el código de enlace para vincular el kiosco y marca con el PIN.
 
 ## Scripts
 
-| Script            | Qué hace                                                    |
-| ----------------- | ----------------------------------------------------------- |
-| `pnpm lint`       | ESLint en todos los paquetes                                |
-| `pnpm typecheck`  | TypeScript estricto en todos los paquetes                   |
-| `pnpm test`       | Vitest (las de `packages/db` necesitan `pnpm db:start`)     |
-| `pnpm format`     | Prettier                                                    |
-| `pnpm db:migrate` | Aplica las migraciones pendientes a la base local           |
-| `pnpm db:reset`   | Recrea la base local desde cero (migraciones y seeds)       |
-| `pnpm db:seed`    | Vuelve a aplicar los seeds idempotentes de `supabase/seeds` |
+| Script            | Qué hace                                                             |
+| ----------------- | -------------------------------------------------------------------- |
+| `pnpm lint`       | ESLint en todos los paquetes                                         |
+| `pnpm typecheck`  | TypeScript estricto en todos los paquetes                            |
+| `pnpm test`       | Vitest (las de `packages/db` necesitan `pnpm db:start`)              |
+| `pnpm format`     | Prettier                                                             |
+| `pnpm db:migrate` | Aplica las migraciones pendientes a la base local                    |
+| `pnpm db:reset`   | Recrea la base local desde cero (migraciones y seeds)                |
+| `pnpm db:seed`    | Vuelve a aplicar los seeds idempotentes de `supabase/seeds`          |
+| `pnpm db:types`   | Regenera los tipos TypeScript de la base (`packages/db`)             |
+| `pnpm env:local`  | Escribe `apps/*/.env.local` con las llaves del entorno local         |
+| `pnpm test:e2e`   | Playwright: onboarding, PWA sin red y kiosco (requiere `pnpm build`) |
 
 Antes de dar una tarea por terminada: `pnpm lint`, `pnpm typecheck` y `pnpm test` en verde. GitHub
 Actions corre lo mismo en cada PR (`.github/workflows/ci.yml`).
@@ -63,6 +76,26 @@ se aplica desde cero con `pnpm db:reset`.
 La forma canónica del hash y del árbol Merkle está documentada en las migraciones y replicada en
 `packages/dominio`; las pruebas de `packages/db` comparan ambas implementaciones.
 
+## Aplicaciones y API
+
+- **`apps/web`**: registro e inicio de sesión del patrón, alta en 6 pasos (`/onboarding`), panel
+  (`/panel`) y la PWA del trabajador (`/app`, instalable). Monta la API en `/api/v1` y sirve su
+  contrato en `/api/v1/openapi.json`.
+- **`apps/kiosco`**: tablet del negocio. Se vincula con un código de 8 caracteres y marca con PIN o
+  QR; su API vive en `/api/v1/kiosco` y se autentica con el token del dispositivo.
+- **`packages/api`**: esquemas Zod, handlers puros y adaptador HTTP. Las pantallas llaman a los
+  mismos handlers que la API, así que ninguna regla vive solo en una pantalla.
+- **`packages/ui`**: tema de Tailwind v4 y componentes de la identidad (Figma "Mi Jornada —
+  Identidad"). Muestrario en http://localhost:3000/ui (solo en desarrollo).
+- **`packages/offline`**: cola local de marcajes (IndexedDB). El marcaje se guarda primero en el
+  dispositivo y se envía después; reintentar nunca duplica porque la API es idempotente por
+  `client_event_id`.
+
+Cómo se calcula el día laboral (`jornada.dia_laboral`): cuenta la hora del dispositivo si existe
+(una marca hecha sin red vale a la hora en que se hizo) y, si no, la del servidor; el día es el de
+la zona horaria del centro; una jornada que cruza la medianoche pertenece al día en que empezó. Se
+recalcula solo al insertar cada evento y se puede reconstruir con `jornada.recalcular_rango`.
+
 ## Estructura
 
 ```
@@ -77,7 +110,7 @@ supabase/seeds      Seeds versionados e idempotentes
 
 ## Infraestructura
 
-- **GitHub**: `IvanSerranoGit/mijornada` (privado). `main` solo recibe cambios por PR.
+- **GitHub**: `IvanSerranoGit/mijornada` (público). `main` solo recibe cambios por PR.
 - **Vercel**: proyecto `mijornada`, raíz `apps/web`, dominios `mijornada.xyz` y `www.mijornada.xyz`.
 - **DNS**: zona en Cloudflare definida en `infra/dns/mijornada.xyz.zone`; se aplica con
   `scripts/cloudflare-zona.sh` (requiere `CLOUDFLARE_API_TOKEN` en `.env.local`). SPF, DKIM y DMARC

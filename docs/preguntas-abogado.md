@@ -106,11 +106,11 @@ Estados: **Abierta** · **Respondida** (anotar fecha, respuesta y qué se cambi�
 - **Pregunta:** Cuando el dispositivo no tenía red, la marca se guarda con la hora del dispositivo
   y se envía después. ¿Es aceptable usar la hora del dispositivo para el cálculo si la marca llega
   dentro de 24 horas? ¿Y si llega después?
-- **Qué asume hoy el sistema:** guarda las dos horas (dispositivo y servidor). Lo que llega más de
-  24 h después de la hora del dispositivo se acepta y queda marcado como "sincronización tardía".
-  Falta definir cuál de las dos horas usa el cálculo.
-- **Dónde cambia:** el trigger `jornada.encadenar_evento` (umbral de 24 h) y el proceso que llena
-  `jornada.dia_laboral`.
+- **Qué asume hoy el sistema:** guarda las dos horas (dispositivo y servidor) y para calcular el
+  día laboral usa la del dispositivo cuando existe, sin importar cuánto tarde en llegar. Lo que
+  llega más de 24 h después se acepta y queda marcado como "sincronización tardía".
+- **Dónde cambia:** la función `jornada.hora_efectiva` (qué hora cuenta) y el trigger
+  `jornada.encadenar_evento` (umbral de 24 h).
 
 ### 11. Trabajador que no acepta el convenio de registro
 
@@ -162,3 +162,24 @@ Estados: **Abierta** · **Respondida** (anotar fecha, respuesta y qué se cambi�
 - **Qué asume hoy el sistema:** reporte en PDF y CSV; los formatos nuevos se agregan como
   exportadores sin tocar el registro.
 - **Dónde cambia:** dominios `cumplimiento` e `integraciones`.
+
+## Acceso y evidencia (sprint 2)
+
+### 16. PIN de 4 dígitos como identificación del trabajador
+
+- **Estado:** Abierta
+- **Pregunta:** El trabajador se identifica con un PIN de 4 dígitos (en el kiosco) o con correo y
+  PIN (en su celular). ¿Es suficiente para atribuirle una marca ante una inspección o un juicio, o
+  conviene exigir algo más (foto obligatoria, contraseña propia)?
+- **Qué asume hoy el sistema:** el PIN basta; la foto es opcional por centro y se bloquea 15
+  minutos tras 5 intentos fallidos.
+- **Dónde cambia:** configuración por centro (`foto_en_kiosco`, `foto_en_telefono`).
+
+### 17. Marcas fuera de la geocerca
+
+- **Estado:** Abierta
+- **Pregunta:** Si un trabajador marca desde su celular fuera del radio del centro de trabajo, la
+  marca se registra y queda anotada como "fuera de geocerca". ¿Esa anotación puede usarse en su
+  contra, o debe informarse expresamente en el aviso de privacidad y en el convenio?
+- **Qué asume hoy el sistema:** nunca bloquea la marca; solo la anota.
+- **Dónde cambia:** textos de consentimiento (sprint 3) y `jornada.evento.fuera_de_geocerca`.

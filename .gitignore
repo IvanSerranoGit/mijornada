@@ -20,3 +20,8 @@ supabase/.branches
 
 # Generado por `next dev`
 apps/*/AGENTS.md
+
+# Playwright
+e2e/resultados
+playwright-report
+test-results
