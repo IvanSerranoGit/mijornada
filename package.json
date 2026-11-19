@@ -20,7 +20,7 @@
     "db:seed": "pnpm --filter @mijornada/db seed",
     "db:types": "supabase gen types typescript --local --schema tenants,jornada,calculo > packages/db/src/database.types.ts",
     "env:local": "./scripts/env-local.sh",
-    "test:e2e": "playwright test"
+    "test:e2e": "pnpm build && playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

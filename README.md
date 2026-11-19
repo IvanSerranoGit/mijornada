@@ -33,18 +33,18 @@ Recorrido para probar a mano:
 
 ## Scripts
 
-| Script            | Qué hace                                                             |
-| ----------------- | -------------------------------------------------------------------- |
-| `pnpm lint`       | ESLint en todos los paquetes                                         |
-| `pnpm typecheck`  | TypeScript estricto en todos los paquetes                            |
-| `pnpm test`       | Vitest (las de `packages/db` necesitan `pnpm db:start`)              |
-| `pnpm format`     | Prettier                                                             |
-| `pnpm db:migrate` | Aplica las migraciones pendientes a la base local                    |
-| `pnpm db:reset`   | Recrea la base local desde cero (migraciones y seeds)                |
-| `pnpm db:seed`    | Vuelve a aplicar los seeds idempotentes de `supabase/seeds`          |
-| `pnpm db:types`   | Regenera los tipos TypeScript de la base (`packages/db`)             |
-| `pnpm env:local`  | Escribe `apps/*/.env.local` con las llaves del entorno local         |
-| `pnpm test:e2e`   | Playwright: onboarding, PWA sin red y kiosco (requiere `pnpm build`) |
+| Script            | Qué hace                                                                      |
+| ----------------- | ----------------------------------------------------------------------------- |
+| `pnpm lint`       | ESLint en todos los paquetes                                                  |
+| `pnpm typecheck`  | TypeScript estricto en todos los paquetes                                     |
+| `pnpm test`       | Vitest (las de `packages/db` necesitan `pnpm db:start`)                       |
+| `pnpm format`     | Prettier                                                                      |
+| `pnpm db:migrate` | Aplica las migraciones pendientes a la base local                             |
+| `pnpm db:reset`   | Recrea la base local desde cero (migraciones y seeds)                         |
+| `pnpm db:seed`    | Vuelve a aplicar los seeds idempotentes de `supabase/seeds`                   |
+| `pnpm db:types`   | Regenera los tipos TypeScript de la base (`packages/db`)                      |
+| `pnpm env:local`  | Escribe `apps/*/.env.local` con las llaves del entorno local                  |
+| `pnpm test:e2e`   | Construye las apps y corre Playwright: onboarding, PWA sin red, foto y kiosco |
 
 Antes de dar una tarea por terminada: `pnpm lint`, `pnpm typecheck` y `pnpm test` en verde. GitHub
 Actions corre lo mismo en cada PR (`.github/workflows/ci.yml`).
@@ -95,6 +95,8 @@ Cómo se calcula el día laboral (`jornada.dia_laboral`): cuenta la hora del dis
 (una marca hecha sin red vale a la hora en que se hizo) y, si no, la del servidor; el día es el de
 la zona horaria del centro; una jornada que cruza la medianoche pertenece al día en que empezó. Se
 recalcula solo al insertar cada evento y se puede reconstruir con `jornada.recalcular_rango`.
+
+Cómo funciona el marcaje sin conexión, la foto y el diagnóstico de dispositivos: [docs/marcaje-sin-conexion.md](docs/marcaje-sin-conexion.md).
 
 ## Estructura
 

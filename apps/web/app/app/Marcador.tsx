@@ -55,7 +55,7 @@ async function enviar(marca: MarcaPendiente<Payload>): Promise<ResultadoEnvio> {
     body: JSON.stringify(marca.payload),
   });
   if (response.status === 401 || response.status === 429 || response.status >= 500)
-    return { estado: "reintentar" };
+    return { estado: "reintentar", detalle: `HTTP ${String(response.status)}` };
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as { mensaje?: string } | null;
     return { estado: "rechazado", error: body?.mensaje ?? "El servidor no aceptó el marcaje." };
@@ -104,7 +104,11 @@ export function Marcador(props: Props) {
     const enviados = await getCola().sync(enviar);
     setPendientes((await getCola().pendientes()).length);
     setRechazados(await getCola().rechazados());
-    if (enviados > 0) router.refresh();
+    if (enviados > 0) {
+      // Lo que estaba "guardado en este teléfono" ya llegó: el aviso deja de ser cierto.
+      setAviso(null);
+      router.refresh();
+    }
   }, [router]);
 
   useEffect(() => {
@@ -187,12 +191,16 @@ export function Marcador(props: Props) {
       const nueva = { tipo: siguiente, hora: hora.toISOString() };
       setLocal(nueva);
       await getAlmacen().set("ultima", { ...nueva, fecha: props.hoy });
-      setAviso(
-        `${siguiente === "entrada" ? "Entrada" : "Salida"} registrada a las ${formatoHora(hora, props.zona)}.` +
-          (sinFoto ? " No se pudo guardar la foto." : ""),
-      );
       setOcupado("Enviando…");
       await sincronizar();
+      // "Registrada" solo cuando el servidor la tiene; si no, está guardada en el teléfono.
+      const enviada = !(await getCola().pendientes()).some(
+        (marca) => marca.clientEventId === payload.client_event_id,
+      );
+      setAviso(
+        `${siguiente === "entrada" ? "Entrada" : "Salida"} ${enviada ? "registrada" : "guardada en este teléfono"} a las ${formatoHora(hora, props.zona)}.` +
+          (sinFoto ? " No se pudo guardar la foto." : ""),
+      );
     } catch (error) {
       reportarError("pwa:marcar", error);
       setAviso("No se pudo registrar. Intenta de nuevo.");
@@ -262,7 +270,7 @@ export function Marcador(props: Props) {
       {aviso ? (
         <p role="status" className="text-pequeno text-text-secondary">
           {aviso}
-          {pendientes > 0 ? " Se enviará cuando haya conexión." : ""}
+          {pendientes > 0 ? " Se enviará sola cuando haya conexión; no la repitas." : ""}
         </p>
       ) : ultima ? (
         <p className="text-pequeno text-text-secondary">

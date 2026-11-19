@@ -14,13 +14,18 @@ export interface MarcaPendiente<P> {
   foto?: Blob;
   estado: "pendiente" | "rechazado";
   intentos: number;
-  /** Mensaje del servidor si rechazó el marcaje. */
+  /** Si está rechazado, el mensaje del servidor; si sigue pendiente, por qué falló el último envío. */
   error?: string;
 }
 
-/** ok: llegó (o ya había llegado). rechazado: el servidor no lo acepta. reintentar: sin red o error temporal. */
+/**
+ * ok: llegó (o ya había llegado). rechazado: el servidor no lo acepta.
+ * reintentar: sin red o error temporal; `detalle` dice por qué, para el diagnóstico.
+ */
 export type ResultadoEnvio =
-  { estado: "ok" } | { estado: "rechazado"; error: string } | { estado: "reintentar" };
+  | { estado: "ok" }
+  | { estado: "rechazado"; error: string }
+  | { estado: "reintentar"; detalle?: string };
 
 /** Cómo se guarda una marca en IndexedDB: la foto va como bytes, no como Blob. */
 type Fila<P> = Omit<MarcaPendiente<P>, "foto"> & { fotoBytes?: ArrayBuffer };
@@ -98,21 +103,30 @@ export class ColaMarcajes<P> {
       let resultado: ResultadoEnvio;
       try {
         resultado = await send(marca);
-      } catch {
-        resultado = { estado: "reintentar" };
+      } catch (error) {
+        resultado = { estado: "reintentar", detalle: describirError(error) };
       }
 
       if (resultado.estado === "ok") {
         await this.marcas.delete(marca.clientEventId);
         enviados += 1;
+        // Mientras el envío falla puede no haber red para avisar; se avisa al lograrlo.
+        if (marca.intentos > 0) {
+          reportarError(
+            "cola:enviada-tras-reintentos",
+            `${String(marca.intentos)} intentos fallidos · último: ${marca.error ?? "sin detalle"}`,
+          );
+        }
       } else if (resultado.estado === "rechazado") {
         await this.marcas.update(marca.clientEventId, (fila) => {
           fila.estado = "rechazado";
           fila.error = resultado.error;
         });
       } else {
+        const { detalle } = resultado;
         await this.marcas.update(marca.clientEventId, (fila) => {
           fila.intentos += 1;
+          if (detalle !== undefined) fila.error = detalle;
         });
         break;
       }
@@ -206,11 +220,14 @@ export async function fotoDesdeArchivo(archivo: Blob, lado = 640): Promise<Blob>
   }
 }
 
+function describirError(error: unknown): string {
+  return (error instanceof Error ? `${error.name}: ${error.message}` : String(error)).slice(0, 500);
+}
+
 /** Avisa al servidor de un error del dispositivo, para poder diagnosticarlo. No lleva datos personales. */
 export function reportarError(donde: string, error: unknown): void {
   try {
-    const detalle = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-    const cuerpo = JSON.stringify({ donde, detalle: detalle.slice(0, 500) });
+    const cuerpo = JSON.stringify({ donde, detalle: describirError(error) });
     navigator.sendBeacon("/api/diagnostico", new Blob([cuerpo], { type: "application/json" }));
   } catch {
     // Sin red o sin sendBeacon: no hay nada más que hacer.

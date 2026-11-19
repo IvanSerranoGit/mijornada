@@ -98,7 +98,7 @@ test("marcaje en la PWA con la red cortada y envío al recuperarla", async ({ pa
   // Se corta la red: la marca se guarda en el teléfono y queda pendiente.
   await context.setOffline(true);
   await page.getByRole("button", { name: "Registrar entrada" }).click();
-  await expect(page.getByText(/Entrada registrada a las \d{2}:\d{2}/)).toBeVisible();
+  await expect(page.getByText(/Entrada guardada en este teléfono a las \d{2}:\d{2}/)).toBeVisible();
   await expect(page.getByText("1 marca pendiente de enviar")).toBeVisible();
   await expect(page.getByText("Sin conexión")).toBeVisible();
   // Ya cuenta como entrada: lo siguiente es la salida.

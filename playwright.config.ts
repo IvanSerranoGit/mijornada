@@ -34,13 +34,13 @@ export default defineConfig({
     {
       command: "pnpm --filter @mijornada/web start",
       url: "http://localhost:3000/entrar",
-      reuseExistingServer: true,
+      reuseExistingServer: false,
       timeout: 60_000,
     },
     {
       command: "pnpm --filter @mijornada/kiosco start",
       url: "http://localhost:3001",
-      reuseExistingServer: true,
+      reuseExistingServer: false,
       timeout: 60_000,
     },
   ],

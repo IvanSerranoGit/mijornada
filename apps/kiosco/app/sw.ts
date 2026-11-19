@@ -15,8 +15,7 @@ const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST ?? [],
   skipWaiting: true,
   clientsClaim: true,
-  // Sin precarga de navegación: en Safari de iPhone provoca cargas interrumpidas.
-  navigationPreload: false,
+  navigationPreload: true,
   runtimeCaching: defaultCache,
 });
 
