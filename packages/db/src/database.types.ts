@@ -290,6 +290,14 @@ export type Database = {
 "crear_particion_evento":
 { Args: { "p_mes": string }; Returns: string
                            },
+"hora_efectiva":
+{ Args: { "p_ts_dispositivo": string,"p_ts_servidor": string }; Returns: string
+                           },
+"marcajes_vigentes":
+{ Args: { "p_desde": string,"p_hasta": string,"p_tenant_id": string,"p_trabajador_id": string }; Returns: {
+              "corregido": boolean,"hora": string,"id": string,"tipo": string
+            }[]
+                           },
 "raiz_merkle":
 { Args: { "p_hashes": (string)[] }; Returns: string
                            },
@@ -297,6 +305,12 @@ export type Database = {
 { Args: { "p_fecha": string,"p_tenant_id": string }; Returns: {
               "hash_raiz": string,"n_eventos": number
             }[]
+                           },
+"recalcular_dia":
+{ Args: { "p_fecha": string,"p_tenant_id": string,"p_trabajador_id": string }; Returns: undefined
+                           },
+"recalcular_rango":
+{ Args: { "p_desde": string,"p_hasta": string,"p_tenant_id": string }; Returns: number
                            },
 "sellar_dia":
 { Args: { "p_fecha": string,"p_tenant_id": string }; Returns: {
