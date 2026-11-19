@@ -110,9 +110,61 @@ supabase/seeds      Seeds versionados e idempotentes
 
 ## Infraestructura
 
-- **GitHub**: `IvanSerranoGit/mijornada` (público). `main` solo recibe cambios por PR.
-- **Vercel**: proyecto `mijornada`, raíz `apps/web`, dominios `mijornada.xyz` y `www.mijornada.xyz`.
-- **DNS**: zona en Cloudflare definida en `infra/dns/mijornada.xyz.zone`; se aplica con
-  `scripts/cloudflare-zona.sh` (requiere `CLOUDFLARE_API_TOKEN` en `.env.local`). SPF, DKIM y DMARC
-  están en ese archivo como placeholders comentados.
-- **Supabase**: solo entorno local en el sprint 1; el proyecto en la nube se crea al final del sprint 2.
+- **GitHub**: `IvanSerranoGit/mijornada` (público). `main` solo recibe cambios por PR y exige el
+  check de CI.
+- **Vercel** (equipo `ivanserranogits-projects`), dos proyectos conectados a este repo:
+  - `mijornada` → raíz `apps/web` → https://mijornada.xyz (canónico, sin www;
+    `www.mijornada.xyz` redirige con 308).
+  - `mijornada-kiosco` → raíz `apps/kiosco` → https://kiosco.mijornada.xyz.
+- **DNS**: zona `mijornada.xyz` en Cloudflare, definida en `infra/dns/mijornada.xyz.zone` (solo
+  DNS, sin proxy). El apex es un CNAME que Cloudflare aplana.
+- **Supabase**: organización `Mi Jornada` (plan gratuito), proyecto `mijornada` en us-east-1. Su
+  configuración vive en `infra/supabase-produccion/supabase/config.toml`.
+
+### Entornos
+
+| Entorno    | Web                   | Kiosco                       | Base                           |
+| ---------- | --------------------- | ---------------------------- | ------------------------------ |
+| Local      | http://localhost:3000 | http://localhost:3001        | `supabase start` (Docker)      |
+| Preview    | URL de Vercel por PR  | URL de Vercel por PR         | la de producción (no hay otra) |
+| Producción | https://mijornada.xyz | https://kiosco.mijornada.xyz | proyecto `mijornada`           |
+
+Las vistas previas usan la base de producción: no las uses para pruebas que dejen datos.
+
+### Cómo desplegar
+
+1. **Código**: mezclar el PR a `main`. Vercel publica los dos proyectos solo.
+2. **Base** (antes de mezclar, si el PR trae migraciones):
+   ```bash
+   supabase link --project-ref <ref>
+   SUPABASE_DB_PASSWORD=… supabase db push --remote              # migraciones
+   SUPABASE_DB_PASSWORD=… supabase db push --remote --include-seed  # si cambió un seed
+   ```
+3. **Configuración de Supabase** (esquemas de la API, URL de Auth, hook de claims): editar
+   `infra/supabase-produccion/supabase/config.toml` y revisar antes de aplicar:
+   ```bash
+   supabase config diff --workdir infra/supabase-produccion --remote=<ref>
+   supabase config push --workdir infra/supabase-produccion --remote=<ref>
+   ```
+   No se empuja `supabase/config.toml` (es la configuración local).
+4. **DNS**: editar `infra/dns/mijornada.xyz.zone` y aplicar el cambio en Cloudflare.
+
+Variables de entorno en Vercel (producción y preview): `NEXT_PUBLIC_SUPABASE_URL`,
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` en ambos proyectos; además, en
+`mijornada`: `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_KIOSCO_URL`, `NEXT_PUBLIC_AUTH_GOOGLE` y
+`CRON_SECRET`. La contraseña de la base y la referencia del proyecto no están en el repo.
+
+Tareas programadas: pg_cron en Supabase (particiones mensuales, sello diario, limpieza del límite
+de peticiones) y Vercel Cron en `apps/web/vercel.json` (purga de fotos a 90 días y una consulta
+diaria que evita que el plan gratuito pause el proyecto).
+
+### Pendientes de producción
+
+- **Confirmación de correo apagada (provisional).** El correo incluido de Supabase no entrega a
+  direcciones externas, así que por ahora el registro entra sin confirmar el correo y el enlace
+  mágico no es confiable. Cuando el dominio esté verificado en Resend: configurar el SMTP
+  (`smtp.resend.com:465`, usuario `resend`, remitente `hola@mijornada.xyz`), poner las plantillas
+  de correo en español y volver a encender la confirmación quitando el bloque `[auth.email]` de
+  `infra/supabase-produccion/supabase/config.toml`.
+- **Quitar el cron `mantener-activo`** cuando empiece el piloto (ya habrá tráfico real).
+- **Entrada con Google**: fuera del piloto; oculta con `NEXT_PUBLIC_AUTH_GOOGLE=false`.
