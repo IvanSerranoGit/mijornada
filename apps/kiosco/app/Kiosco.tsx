@@ -7,6 +7,7 @@ import {
   ColaMarcajes,
   hashBlob,
   pedirSincronizacion,
+  reportarError,
   toJpeg,
   type MarcaPendiente,
   type ResultadoEnvio,
@@ -344,7 +345,8 @@ function Marcaje({
             tipo: respuesta.tipo,
             hora: horaTexto,
           });
-      } catch {
+      } catch (error) {
+        reportarError("kiosco:marcar", error);
         setConfirmacion({ clase: "error", mensaje: "No se pudo registrar. Intenta de nuevo." });
       } finally {
         setPin("");

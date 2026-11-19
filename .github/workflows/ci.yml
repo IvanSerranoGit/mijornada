@@ -55,7 +55,7 @@ jobs:
       # Punta a punta: onboarding, PWA sin red y kiosco contra las apps compiladas.
       - run: pnpm env:local
       - run: pnpm build
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright install --with-deps chromium webkit
       - run: pnpm test:e2e
 
       - uses: actions/upload-artifact@v4

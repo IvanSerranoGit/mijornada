@@ -22,9 +22,12 @@ export interface MarcaPendiente<P> {
 export type ResultadoEnvio =
   { estado: "ok" } | { estado: "rechazado"; error: string } | { estado: "reintentar" };
 
+/** Cómo se guarda una marca en IndexedDB: la foto va como bytes, no como Blob. */
+type Fila<P> = Omit<MarcaPendiente<P>, "foto"> & { fotoBytes?: ArrayBuffer };
+
 export class ColaMarcajes<P> {
   private readonly db: Dexie;
-  private readonly marcas: Table<MarcaPendiente<P>, string>;
+  private readonly marcas: Table<Fila<P>, string>;
   private sincronizando: Promise<number> | null = null;
 
   constructor(nombre: string) {
@@ -33,21 +36,45 @@ export class ColaMarcajes<P> {
     this.marcas = this.db.table("marcas");
   }
 
-  async add(marca: Omit<MarcaPendiente<P>, "estado" | "intentos">): Promise<void> {
-    await this.marcas.put({ ...marca, estado: "pendiente", intentos: 0 });
+  /**
+   * Guarda la marca. La foto se guarda como bytes porque Safari (iPhone, iPad) puede
+   * fallar al guardar un Blob en IndexedDB. Si aun así la foto no se puede guardar,
+   * la marca se guarda sin ella: registrar la jornada nunca se bloquea por la foto.
+   * Devuelve false en ese caso.
+   */
+  async add(marca: Omit<MarcaPendiente<P>, "estado" | "intentos">): Promise<boolean> {
+    const { foto, ...resto } = marca;
+    const fila: Fila<P> = { ...resto, estado: "pendiente", intentos: 0 };
+    if (foto) {
+      try {
+        await this.marcas.put({ ...fila, fotoBytes: await foto.arrayBuffer() });
+        return true;
+      } catch {
+        await this.marcas.put(fila);
+        return false;
+      }
+    }
+    await this.marcas.put(fila);
+    return true;
+  }
+
+  private async leer(estado: MarcaPendiente<P>["estado"]): Promise<MarcaPendiente<P>[]> {
+    const filas = (await this.marcas.orderBy("creadoEn").toArray()).filter(
+      (m) => m.estado === estado,
+    );
+    return filas.map(({ fotoBytes, ...resto }) => ({
+      ...resto,
+      ...(fotoBytes ? { foto: new Blob([fotoBytes], { type: "image/jpeg" }) } : {}),
+    }));
   }
 
   /** Marcajes sin enviar, del más antiguo al más reciente. */
-  async pendientes(): Promise<MarcaPendiente<P>[]> {
-    return (await this.marcas.orderBy("creadoEn").toArray()).filter(
-      (m) => m.estado === "pendiente",
-    );
+  pendientes(): Promise<MarcaPendiente<P>[]> {
+    return this.leer("pendiente");
   }
 
-  async rechazados(): Promise<MarcaPendiente<P>[]> {
-    return (await this.marcas.orderBy("creadoEn").toArray()).filter(
-      (m) => m.estado === "rechazado",
-    );
+  rechazados(): Promise<MarcaPendiente<P>[]> {
+    return this.leer("rechazado");
   }
 
   async descartar(clientEventId: string): Promise<void> {
@@ -79,9 +106,14 @@ export class ColaMarcajes<P> {
         await this.marcas.delete(marca.clientEventId);
         enviados += 1;
       } else if (resultado.estado === "rechazado") {
-        await this.marcas.put({ ...marca, estado: "rechazado", error: resultado.error });
+        await this.marcas.update(marca.clientEventId, (fila) => {
+          fila.estado = "rechazado";
+          fila.error = resultado.error;
+        });
       } else {
-        await this.marcas.put({ ...marca, intentos: marca.intentos + 1 });
+        await this.marcas.update(marca.clientEventId, (fila) => {
+          fila.intentos += 1;
+        });
         break;
       }
     }
@@ -140,6 +172,49 @@ export async function toJpeg(
       0.7,
     );
   });
+}
+
+/**
+ * Convierte la foto que entrega la cámara en un JPEG reducido. Usa createImageBitmap
+ * y, si el navegador no puede con ese archivo, una imagen normal como respaldo.
+ */
+export async function fotoDesdeArchivo(archivo: Blob, lado = 640): Promise<Blob> {
+  try {
+    const bitmap = await createImageBitmap(archivo);
+    try {
+      return await toJpeg(bitmap, bitmap.width, bitmap.height, lado);
+    } finally {
+      bitmap.close();
+    }
+  } catch {
+    const url = URL.createObjectURL(archivo);
+    try {
+      const imagen = new Image();
+      await new Promise<void>((resolve, reject) => {
+        imagen.onload = () => {
+          resolve();
+        };
+        imagen.onerror = () => {
+          reject(new Error("No se pudo leer la foto."));
+        };
+        imagen.src = url;
+      });
+      return await toJpeg(imagen, imagen.naturalWidth, imagen.naturalHeight, lado);
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+}
+
+/** Avisa al servidor de un error del dispositivo, para poder diagnosticarlo. No lleva datos personales. */
+export function reportarError(donde: string, error: unknown): void {
+  try {
+    const detalle = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    const cuerpo = JSON.stringify({ donde, detalle: detalle.slice(0, 500) });
+    navigator.sendBeacon("/api/diagnostico", new Blob([cuerpo], { type: "application/json" }));
+  } catch {
+    // Sin red o sin sendBeacon: no hay nada más que hacer.
+  }
 }
 
 /** Una sola lectura de ubicación; null si se niega, falla o tarda más de `timeoutMs`. */

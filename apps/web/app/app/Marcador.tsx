@@ -6,9 +6,10 @@ import {
   Almacen,
   alSincronizar,
   ColaMarcajes,
+  fotoDesdeArchivo,
   hashBlob,
   pedirSincronizacion,
-  toJpeg,
+  reportarError,
   ubicacionPuntual,
   type MarcaPendiente,
   type ResultadoEnvio,
@@ -149,10 +150,16 @@ export function Marcador(props: Props) {
     const hora = new Date();
     try {
       let foto: Blob | undefined;
+      let sinFoto = false;
       if (archivo) {
         setOcupado("Procesando la foto…");
-        const bitmap = await createImageBitmap(archivo);
-        foto = await toJpeg(bitmap, bitmap.width, bitmap.height);
+        try {
+          foto = await fotoDesdeArchivo(archivo);
+        } catch (error) {
+          // La foto nunca impide registrar la jornada.
+          sinFoto = true;
+          reportarError("pwa:foto", error);
+        }
       }
 
       setOcupado("Obteniendo tu ubicación…");
@@ -169,22 +176,25 @@ export function Marcador(props: Props) {
       };
 
       // Primero se guarda en el teléfono; después se intenta enviar.
-      await getCola().add({
+      const fotoGuardada = await getCola().add({
         clientEventId: payload.client_event_id,
         creadoEn: hora.getTime(),
         payload,
         ...(foto ? { foto } : {}),
       });
+      if (!fotoGuardada) sinFoto = true;
       void pedirSincronizacion();
       const nueva = { tipo: siguiente, hora: hora.toISOString() };
       setLocal(nueva);
       await getAlmacen().set("ultima", { ...nueva, fecha: props.hoy });
       setAviso(
-        `${siguiente === "entrada" ? "Entrada" : "Salida"} registrada a las ${formatoHora(hora, props.zona)}.`,
+        `${siguiente === "entrada" ? "Entrada" : "Salida"} registrada a las ${formatoHora(hora, props.zona)}.` +
+          (sinFoto ? " No se pudo guardar la foto." : ""),
       );
       setOcupado("Enviando…");
       await sincronizar();
-    } catch {
+    } catch (error) {
+      reportarError("pwa:marcar", error);
       setAviso("No se pudo registrar. Intenta de nuevo.");
     } finally {
       setOcupado(null);

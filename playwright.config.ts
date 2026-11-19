@@ -11,16 +11,25 @@ export default defineConfig({
   reporter: [["list"]],
   outputDir: "e2e/resultados",
   use: {
-    ...devices["Pixel 7"],
     locale: "es-MX",
     timezoneId: "America/Mexico_City",
     video: "on",
     trace: "retain-on-failure",
-    launchOptions: {
-      // Cámara simulada para la foto y el QR del kiosco.
-      args: ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"],
-    },
   },
+  projects: [
+    {
+      name: "android",
+      use: {
+        ...devices["Pixel 7"],
+        launchOptions: {
+          // Cámara simulada para la foto y el QR del kiosco.
+          args: ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"],
+        },
+      },
+    },
+    // Safari de iPhone: solo el marcaje con foto, que depende del motor del navegador.
+    { name: "iphone", use: { ...devices["iPhone 15"] }, testMatch: /foto\.spec\.ts/ },
+  ],
   webServer: [
     {
       command: "pnpm --filter @mijornada/web start",
