@@ -57,7 +57,7 @@ function requireTenant(ctx: Ctx): string {
 const TRABAJADOR_COLUMNS =
   "id, tenant_id, centro_id, nombre, puesto, fecha_alta, fecha_baja, tipo_jornada, menor_de_edad, metodo_marcaje, creado_en";
 const EVENTO_COLUMNS =
-  "id, tenant_id, trabajador_id, tipo, ts_servidor, ts_dispositivo, origen, dispositivo_id, client_event_id, lat, lng, precision_m, foto_url, foto_hash, hash_prev, hash, creado_por, motivo, referencia_evento_id";
+  "id, tenant_id, trabajador_id, tipo, ts_servidor, ts_dispositivo, origen, dispositivo_id, client_event_id, lat, lng, precision_m, foto_url, foto_hash, hash_prev, hash, creado_por, motivo, referencia_evento_id, fuera_de_geocerca";
 
 // ---------------------------------------------------------------- empresas
 
