@@ -151,6 +151,15 @@ export async function createCodigoEnlace(ctx: Ctx, centroId: string, nombre?: st
   return { codigo: data };
 }
 
+/** Genera (o reemplaza) el PIN de administrador del kiosco del centro; se muestra una sola vez. */
+export async function createPinAdmin(ctx: Ctx, centroId: string) {
+  const { data, error } = await ctx.db
+    .schema("tenants")
+    .rpc("generar_pin_admin", { centro_id: centroId });
+  if (error) throw fromDatabase(error);
+  return { pin_admin: data };
+}
+
 // ---------------------------------------------------------------- trabajadores
 
 export async function listTrabajadores(
@@ -425,7 +434,7 @@ export interface PanelSemanal {
   hoy: string;
   lunes: string;
   zonaHoraria: string;
-  centros: { id: string; nombre: string; zona_horaria: string }[];
+  centros: { id: string; nombre: string; zona_horaria: string; metodo_marcaje: string | null }[];
   trabajadores: SemanaTrabajador[];
 }
 
@@ -549,7 +558,12 @@ export async function getPanelSemanal(ctx: Ctx, ahora: Date = new Date()): Promi
     hoy,
     lunes,
     zonaHoraria: empresa.zona_horaria,
-    centros: centros.map((c) => ({ id: c.id, nombre: c.nombre, zona_horaria: c.zona_horaria })),
+    centros: centros.map((c) => ({
+      id: c.id,
+      nombre: c.nombre,
+      zona_horaria: c.zona_horaria,
+      metodo_marcaje: c.metodo_marcaje,
+    })),
     trabajadores: semana,
   };
 }

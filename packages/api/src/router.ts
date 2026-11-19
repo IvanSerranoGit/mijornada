@@ -118,6 +118,16 @@ export const RUTAS: Ruta[] = [
   }),
 
   ruta({
+    metodo: "POST",
+    ruta: "/centros/{id}/pin-admin",
+    etiqueta: "Centros",
+    resumen:
+      "Genera un PIN de administrador del kiosco nuevo (para desvincular tablets); el anterior deja de servir.",
+    status: 201,
+    handler: (ctx, { params }) => h.createPinAdmin(ctx, param(params, "id")),
+  }),
+
+  ruta({
     metodo: "GET",
     ruta: "/usuarios",
     etiqueta: "Usuarios",

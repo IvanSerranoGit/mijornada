@@ -1,8 +1,14 @@
 // Hash encadenado de jornada.evento. Debe producir exactamente lo mismo que la
 // función SQL jornada.calcular_hash_evento (ver supabase/migrations).
 //
-// Forma canónica: los once campos unidos con "|" en UTF-8; un nulo es la cadena
-// vacía; las horas van en UTC con microsegundos; lat y lng con seis decimales.
+// Forma canónica: los campos unidos con "|" en UTF-8; un nulo es la cadena vacía;
+// las horas van en UTC con microsegundos; lat y lng con seis decimales.
+//
+//   v1: los once campos de la fórmula original.
+//   v2: el prefijo "v2", los once campos y ts_declarado (la hora que se afirma que
+//       ocurrió el marcaje, en correcciones y marcajes por incidencia).
+//
+// Cada evento guarda su versión (jornada.evento.hash_version) y se verifica con ella.
 
 /** Campos de un evento que entran al hash, en el orden de la fórmula. */
 export interface EventHashInput {
@@ -18,6 +24,10 @@ export interface EventHashInput {
   lng: string | number | null;
   fotoHash: string | null;
   creadoPor: string;
+  /** Solo entra al hash en la versión 2. */
+  tsDeclarado?: string | Date | null;
+  /** Versión de la fórmula; 1 si se omite. */
+  hashVersion?: 1 | 2;
 }
 
 const CANONICAL_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/;
@@ -78,7 +88,7 @@ export function canonicalCoordinate(value: string | number | null): string {
 
 /** Cadena canónica sobre la que se calcula el SHA-256. */
 export function canonicalEventString(event: EventHashInput): string {
-  return [
+  const v1 = [
     event.hashPrev ?? "",
     event.tenantId,
     event.trabajadorId,
@@ -90,7 +100,12 @@ export function canonicalEventString(event: EventHashInput): string {
     canonicalCoordinate(event.lng),
     event.fotoHash ?? "",
     event.creadoPor,
-  ].join("|");
+  ];
+  if ((event.hashVersion ?? 1) === 1) {
+    return v1.join("|");
+  }
+  const tsDeclarado = event.tsDeclarado == null ? "" : canonicalTimestamp(event.tsDeclarado);
+  return ["v2", ...v1, tsDeclarado].join("|");
 }
 
 /** SHA-256 encadenado del evento, en hexadecimal. */

@@ -90,15 +90,30 @@ Estados: **Abierta** · **Respondida** (anotar fecha, respuesta y qué se cambi�
 
 ### 9. Qué hora cuenta cuando se corrige una marca
 
-- **Estado:** Abierta
-- **Pregunta:** Si un trabajador olvidó marcar y el patrón aprueba una corrección días después,
-  ¿qué hora vale para el cálculo: la que declara la corrección o la del momento en que se
+- **Estado:** Respondida provisionalmente (19-nov-2026, decisión del producto; falta la opinión del
+  abogado)
+- **Pregunta:** Si un trabajador olvidó marcar o marcó mal y se aprueba una corrección días
+  después, ¿qué hora vale para el cálculo: la que declara la corrección o la del momento en que se
   registró? ¿Debe constar la conformidad del trabajador con la hora corregida?
-- **Qué asume hoy el sistema:** nada todavía. La marca original nunca se modifica y la corrección
-  es un evento nuevo con motivo y autor, pero el modelo no tiene un campo propio para la hora
-  corregida. Esta respuesta bloquea el cálculo de días laborales.
-- **Dónde cambia:** una columna nueva en `jornada.evento` (migración) y el proceso que llena
-  `jornada.dia_laboral`.
+- **Qué asume hoy el sistema:**
+  - Vale la **hora declarada** (`jornada.evento.ts_declarado`): la hora en que se afirma que
+    ocurrió la entrada o la salida. La hora en que se registró la corrección queda aparte
+    (`ts_servidor`). La marca original nunca se modifica.
+  - El reporte debe mostrar siempre las dos horas, el motivo y quién aprobó.
+  - **Conformidad del trabajador:** si la corrección la pide el propio trabajador, nace con su
+    conformidad; si la abre el patrón, queda "sin conformidad del trabajador" hasta que él la
+    acepte desde su celular (`cumplimiento.incidencia.aceptada_por`, `aceptada_en`).
+  - La hora declarada entra al hash encadenado (versión 2), así que tampoco se puede alterar sin
+    rastro.
+- **Qué cambiaría si el abogado dice otra cosa:**
+  - Si la hora que vale es la del registro: `jornada.hora_efectiva` deja de usar `ts_declarado`
+    (una función) y se recalculan los días con `jornada.recalcular_rango`. No se pierde nada: las
+    dos horas están guardadas.
+  - Si la conformidad debe ser obligatoria para aprobar: `cumplimiento.resolver_incidencia`
+    rechazaría las incidencias sin `aceptada_en`.
+  - Si se requiere firma y no un clic: se agrega el método de aceptación, como en los
+    consentimientos.
+- **Dónde está:** migración `20261119000022_hora_declarada.sql`.
 
 ### 10. Marcas que llegan tarde por falta de internet
 

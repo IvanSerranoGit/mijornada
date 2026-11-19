@@ -7,7 +7,7 @@ const KIOSCO = "http://localhost:3001";
 const unique = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
 // Datos que un paso deja para el siguiente.
-const datos = { pin: "", codigo: "", invitacion: "" };
+const datos = { pin: "", codigo: "", invitacion: "", pinAdmin: "" };
 
 test.describe.configure({ mode: "serial" });
 
@@ -69,6 +69,12 @@ test("onboarding completo en menos de 10 minutos", async ({ page }) => {
   const enlace = page.getByText(/\/invitacion\//);
   await expect(enlace).toBeVisible();
   datos.invitacion = (await enlace.textContent()) ?? "";
+
+  // Y se genera el PIN de administrador del kiosco, que se pide para desvincular una tablet.
+  await page.getByRole("button", { name: "Nuevo PIN de administrador" }).click();
+  const pinAdmin = page.getByRole("status").locator("p.tracking-widest");
+  await expect(pinAdmin).toHaveText(/^\d{6}$/);
+  datos.pinAdmin = (await pinAdmin.textContent()) ?? "";
 
   expect(Date.now() - inicio).toBeLessThan(10 * 60_000);
 });
@@ -144,6 +150,17 @@ test("vinculación y marcaje en el kiosco", async ({ page }) => {
   // Tras recargar sigue vinculado (el token vive en IndexedDB).
   await page.reload();
   await expect(page.getByText("Teclea tu PIN")).toBeVisible();
+
+  // Desvincular pide el PIN de administrador: uno equivocado no sirve, el correcto sí.
+  await page.getByRole("button", { name: "Desvincular este kiosco" }).click();
+  await expect(page.getByText("PIN de administrador (6 dígitos)")).toBeVisible();
+  await teclear(datos.pinAdmin === "000000" ? "111111" : "000000");
+  await expect(page.getByText("No se registró")).toBeVisible();
+  await expect(page.getByText("Teclea tu PIN")).toBeVisible({ timeout: 10_000 });
+
+  await page.getByRole("button", { name: "Desvincular este kiosco" }).click();
+  await teclear(datos.pinAdmin);
+  await expect(page.getByRole("heading", { name: "Vincular este kiosco" })).toBeVisible();
 });
 
 // Lighthouse retiró su categoría PWA (v12), así que los criterios de "instalable"

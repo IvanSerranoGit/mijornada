@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { salir } from "../(cuenta)/actions.ts";
 import { getCtx } from "../../lib/supabase/server.ts";
 import { Invitar } from "./Invitar.tsx";
+import { AccionesKiosco } from "./AccionesKiosco.tsx";
 
 export const metadata: Metadata = { title: "Panel · Mi Jornada" };
 export const dynamic = "force-dynamic";
@@ -140,6 +141,7 @@ export default async function PanelPage() {
           <Tarjeta key={centro.id}>
             <h2 className="font-titulo text-titulo-3 font-bold">{centro.nombre}</h2>
             <p className="text-pequeno text-text-secondary">Semana en curso · horas por día</p>
+            {centro.metodo_marcaje !== "telefono" ? <AccionesKiosco centroId={centro.id} /> : null}
             {delCentro.length === 0 ? (
               <p className="py-(--espacio-md) text-text-secondary">
                 Este centro aún no tiene personas.

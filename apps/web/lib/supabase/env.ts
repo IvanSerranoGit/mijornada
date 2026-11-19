@@ -17,4 +17,5 @@ export const SUPABASE_KEY = required(
   process.env["NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"],
 );
 export const SITE_URL = process.env["NEXT_PUBLIC_SITE_URL"] ?? "http://localhost:3000";
-export const GOOGLE_AUTH_ENABLED = process.env["NEXT_PUBLIC_GOOGLE_AUTH"] === "1";
+// Entrada con Google: fuera del piloto. El botón solo aparece con NEXT_PUBLIC_AUTH_GOOGLE=true.
+export const GOOGLE_AUTH_ENABLED = process.env["NEXT_PUBLIC_AUTH_GOOGLE"] === "true";

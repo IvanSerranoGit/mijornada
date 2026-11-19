@@ -57,6 +57,30 @@ describe("hash del evento", () => {
     );
   });
 
+  it("la versión 2 antepone v2 y agrega ts_declarado; no coincide con la versión 1", async () => {
+    const v2: EventHashInput = { ...entrada, hashVersion: 2, tsDeclarado: null };
+    expect(canonicalEventString(v2)).toBe(`v2|${canonicalEventString(entrada)}|`);
+
+    const declarada: EventHashInput = {
+      ...v2,
+      tipo: "correccion",
+      tsDeclarado: "2027-01-04T15:02:00.000000Z",
+    };
+    expect(canonicalEventString(declarada).endsWith("|2027-01-04T15:02:00.000000Z")).toBe(true);
+
+    const hashes = await Promise.all([
+      computeEventHash(entrada),
+      computeEventHash(v2),
+      computeEventHash({ ...v2, tsDeclarado: "2027-01-04T15:02:00.000000Z" }),
+      computeEventHash({ ...v2, tsDeclarado: "2027-01-04T15:02:00.000001Z" }),
+    ]);
+    expect(new Set(hashes).size).toBe(4);
+    // En la versión 1 ts_declarado no entra al hash.
+    expect(await computeEventHash({ ...entrada, tsDeclarado: "2027-01-04T15:02:00.000000Z" })).toBe(
+      hashes[0],
+    );
+  });
+
   it("es determinista: la misma entrada da siempre el mismo hash", async () => {
     const [a, b] = await Promise.all([computeEventHash(entrada), computeEventHash({ ...entrada })]);
     expect(a).toBe(b);
