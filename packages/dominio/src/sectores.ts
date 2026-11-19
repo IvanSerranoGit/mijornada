@@ -47,3 +47,15 @@ export const SECTORES: readonly Sector[] = [
 export function suggestJurisdiccion(sector: string | null | undefined): Jurisdiccion {
   return SECTORES.find((s) => s.nombre === sector)?.jurisdiccion ?? "local";
 }
+
+/** Zonas horarias de México (IANA) para elegir la del centro de trabajo. */
+export const ZONAS_HORARIAS_MX: readonly { zona: string; nombre: string }[] = [
+  { zona: "America/Mexico_City", nombre: "Centro (Ciudad de México, Guadalajara, Monterrey)" },
+  { zona: "America/Cancun", nombre: "Sureste (Quintana Roo)" },
+  { zona: "America/Chihuahua", nombre: "Chihuahua" },
+  { zona: "America/Ciudad_Juarez", nombre: "Frontera norte (Ciudad Juárez)" },
+  { zona: "America/Matamoros", nombre: "Frontera noreste (Matamoros, Nuevo Laredo)" },
+  { zona: "America/Mazatlan", nombre: "Pacífico (Sinaloa, Nayarit, Baja California Sur)" },
+  { zona: "America/Hermosillo", nombre: "Sonora" },
+  { zona: "America/Tijuana", nombre: "Noroeste (Baja California)" },
+];

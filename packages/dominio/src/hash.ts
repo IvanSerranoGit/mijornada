@@ -40,7 +40,7 @@ export function hexToBytes(hex: string): Uint8Array {
 }
 
 export async function sha256(data: Uint8Array): Promise<Uint8Array> {
-  const digest = await globalThis.crypto.subtle.digest("SHA-256", data);
+  const digest = await globalThis.crypto.subtle.digest("SHA-256", new Uint8Array(data));
   return new Uint8Array(digest);
 }
 
