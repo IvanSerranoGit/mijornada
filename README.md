@@ -73,8 +73,13 @@ se aplica desde cero con `pnpm db:reset`.
   `usuario_id`, `centro_id` y `trabajador_id`, que agrega al JWT el hook
   `tenants.claims_token_acceso` (activado en `supabase/config.toml`).
 
-La forma canónica del hash y del árbol Merkle está documentada en las migraciones y replicada en
-`packages/dominio`; las pruebas de `packages/db` comparan ambas implementaciones.
+- **Estado de la foto**: cada evento dice qué pasó con su foto (`foto_estado`: `ok`,
+  `no_disponible`, `sin_camara`, `no_requerida`); lo fija la base y entra al hash. Ver
+  [docs/marcaje-sin-conexion.md](docs/marcaje-sin-conexion.md).
+
+La forma canónica del hash y sus versiones (1, 2 y 3) están en
+[docs/hash-encadenado.md](docs/hash-encadenado.md), replicadas en `packages/dominio`; las pruebas de
+`packages/db` comparan ambas implementaciones.
 
 ## Aplicaciones y API
 

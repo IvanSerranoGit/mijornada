@@ -7,6 +7,7 @@ import {
   ColaMarcajes,
   hashBlob,
   pedirSincronizacion,
+  describirError,
   reportarError,
   toJpeg,
   type MarcaPendiente,
@@ -30,6 +31,9 @@ interface Payload {
   pin?: string;
   qr?: string;
   foto_hash?: string;
+  /** Solo cuando el centro pide foto y no se pudo tomar: por qué. */
+  foto_estado?: "no_disponible" | "sin_camara";
+  foto_motivo?: string;
 }
 
 interface Marca {
@@ -312,23 +316,38 @@ function Marcaje({
       setOcupado(true);
       const hora = new Date();
       try {
-        let foto: Blob | undefined;
-        const camara = video.current;
-        if (vinculo.foto && camara && camara.videoWidth > 0) {
-          foto = await toJpeg(camara, camara.videoWidth, camara.videoHeight).catch(() => undefined);
-        }
-        const payload: Payload = {
+        // La foto nunca bloquea la marca: si el centro la pide y no se puede tomar o
+        // guardar, la marca va sin ella y dice por qué (sin cámara o fallo técnico).
+        const base: Payload = {
           client_event_id: uuidV7(hora.getTime()),
           ts_dispositivo: hora.toISOString(),
           ...credencial,
-          ...(foto ? { foto_hash: await hashBlob(foto) } : {}),
         };
-        await getCola().add({
-          clientEventId: payload.client_event_id,
-          creadoEn: hora.getTime(),
-          payload,
-          ...(foto ? { foto } : {}),
-        });
+        const marca = { clientEventId: base.client_event_id, creadoEn: hora.getTime() };
+        const camara = video.current;
+        let sinFoto: Pick<Payload, "foto_estado" | "foto_motivo"> = {};
+        let guardada = false;
+        if (vinculo.foto && camara && camara.videoWidth > 0) {
+          try {
+            const foto = await toJpeg(camara, camara.videoWidth, camara.videoHeight);
+            await getCola().add({
+              ...marca,
+              payload: { ...base, foto_hash: await hashBlob(foto) },
+              foto,
+            });
+            guardada = true;
+          } catch (error) {
+            reportarError("kiosco:foto", error);
+            sinFoto = {
+              foto_estado: "no_disponible",
+              foto_motivo: describirError(error).slice(0, 120),
+            };
+          }
+        } else if (vinculo.foto) {
+          sinFoto = { foto_estado: "sin_camara" };
+        }
+        if (!guardada) await getCola().add({ ...marca, payload: { ...base, ...sinFoto } });
+        const payload = base;
         void pedirSincronizacion();
         await sincronizar();
 

@@ -8,6 +8,7 @@ import {
   ColaMarcajes,
   fotoDesdeArchivo,
   hashBlob,
+  describirError,
   pedirSincronizacion,
   reportarError,
   ubicacionPuntual,
@@ -154,14 +155,15 @@ export function Marcador(props: Props) {
     const hora = new Date();
     try {
       let foto: Blob | undefined;
-      let sinFoto = false;
+      // Por qué no hay foto, si el centro la pide y no se pudo tomar o guardar.
+      let fotoFallo: string | undefined;
       if (archivo) {
         setOcupado("Procesando la foto…");
         try {
           foto = await fotoDesdeArchivo(archivo);
         } catch (error) {
           // La foto nunca impide registrar la jornada.
-          sinFoto = true;
+          fotoFallo = describirError(error);
           reportarError("pwa:foto", error);
         }
       }
@@ -169,24 +171,40 @@ export function Marcador(props: Props) {
       setOcupado("Obteniendo tu ubicación…");
       const ubicacion = await ubicacionPuntual(8000);
 
-      const payload: Payload = {
+      const base: Payload = {
         trabajador_id: props.trabajadorId,
         client_event_id: uuidV7(hora.getTime()),
         tipo: siguiente,
         origen: "pwa",
         ts_dispositivo: hora.toISOString(),
         ...(ubicacion ?? {}),
-        ...(foto ? { foto_hash: await hashBlob(foto) } : {}),
       };
+      const payload: Payload = foto ? { ...base, foto_hash: await hashBlob(foto) } : base;
 
-      // Primero se guarda en el teléfono; después se intenta enviar.
-      const fotoGuardada = await getCola().add({
-        clientEventId: payload.client_event_id,
-        creadoEn: hora.getTime(),
-        payload,
-        ...(foto ? { foto } : {}),
+      // Primero se guarda en el teléfono; después se intenta enviar. Si la foto no se
+      // pudo procesar o guardar, la marca va sin ella y lo dice (foto_estado).
+      const sinFoto = (motivo: string): Payload => ({
+        ...base,
+        foto_estado: "no_disponible",
+        foto_motivo: motivo.slice(0, 120),
       });
-      if (!fotoGuardada) sinFoto = true;
+      const marca = { clientEventId: payload.client_event_id, creadoEn: hora.getTime() };
+      let guardada = false;
+      if (foto) {
+        try {
+          await getCola().add({ ...marca, payload, foto });
+          guardada = true;
+        } catch (error) {
+          fotoFallo = describirError(error);
+          reportarError("pwa:foto", error);
+        }
+      }
+      if (!guardada) {
+        await getCola().add({
+          ...marca,
+          payload: fotoFallo === undefined ? payload : sinFoto(fotoFallo),
+        });
+      }
       void pedirSincronizacion();
       const nueva = { tipo: siguiente, hora: hora.toISOString() };
       setLocal(nueva);
@@ -199,7 +217,7 @@ export function Marcador(props: Props) {
       );
       setAviso(
         `${siguiente === "entrada" ? "Entrada" : "Salida"} ${enviada ? "registrada" : "guardada en este teléfono"} a las ${formatoHora(hora, props.zona)}.` +
-          (sinFoto ? " No se pudo guardar la foto." : ""),
+          (fotoFallo === undefined ? "" : " No se pudo guardar la foto."),
       );
     } catch (error) {
       reportarError("pwa:marcar", error);

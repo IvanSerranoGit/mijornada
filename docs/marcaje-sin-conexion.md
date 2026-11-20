@@ -39,11 +39,46 @@ servidor es un rechazo. Un evento que llega más de 24 h después de su
 
 ## Foto
 
-- La foto nunca bloquea la marca: si no se puede procesar o guardar, la marca se
-  registra sin ella y la pantalla lo avisa.
-- En la cola la foto se guarda como bytes (`ArrayBuffer`), no como `Blob`: Safari
-  falla al guardar un `Blob` en IndexedDB ("Error preparing Blob/File data to be
-  stored in object store"). Lo cubre `e2e/foto.spec.ts` en el proyecto `iphone`.
+La foto nunca bloquea la marca. Cada evento guarda qué pasó con ella en
+`jornada.evento.foto_estado` (y, si falló, el motivo técnico corto en `foto_motivo`):
+
+| `foto_estado`   | Significado                                                                        |
+| --------------- | ---------------------------------------------------------------------------------- |
+| `ok`            | Hay foto: el evento lleva `foto_hash`.                                             |
+| `no_disponible` | El centro pide foto pero falló al tomarla o guardarla; `foto_motivo` dice por qué. |
+| `sin_camara`    | El dispositivo no tiene cámara o no dio permiso para usarla.                       |
+| `no_requerida`  | El centro no pide foto para ese medio, o el evento no es un marcaje.               |
+
+El estado final lo fija la base al insertar (`jornada.encadenar_evento`), no el
+dispositivo:
+
+1. Si llega `foto_hash`, es `ok`.
+2. Si no, y el dispositivo declara `sin_camara` o `no_disponible`, se respeta.
+3. Si no declara nada y el centro pide foto para ese medio (`foto_en_kiosco`,
+   `foto_en_telefono`), queda `no_disponible` con el motivo "el dispositivo no
+   informó el motivo".
+4. En cualquier otro caso, `no_requerida`.
+
+`foto_estado` y `foto_motivo` entran al hash del evento (versión 3), así que no se
+pueden cambiar después sin romper la cadena. Los eventos anteriores (versiones 1
+y 2) tienen `foto_estado` nulo.
+
+Dónde se ve:
+
+- `jornada.dia_laboral.fotos_no_disponibles` cuenta los marcajes del día con
+  `no_disponible` o `sin_camara`. El panel muestra "Foto no disponible en N marcas
+  de esta semana" en la fila de la persona. El reporte para inspección (sprint 3)
+  debe usar el mismo dato y decir "foto no disponible", no dejar el hueco.
+- Kiosco sin cámara: cada marcaje del kiosco actualiza
+  `tenants.dispositivo.camara_disponible` (`false` con `sin_camara`, `true` con
+  foto). Si el centro pide foto en kiosco y su kiosco vinculado está en `false`,
+  el panel del dueño muestra un aviso en ese centro. El aviso se quita solo
+  cuando el kiosco vuelve a mandar una foto.
+
+En la cola local la foto se guarda como bytes (`ArrayBuffer`), no como `Blob`:
+Safari falla al guardar un `Blob` en IndexedDB ("Error preparing Blob/File data
+to be stored in object store"). Lo cubre `e2e/foto.spec.ts` en el proyecto
+`iphone`; el kiosco sin cámara, `e2e/sin-camara.spec.ts`.
 
 ## Diagnóstico de dispositivos
 
