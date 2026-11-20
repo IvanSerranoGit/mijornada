@@ -2,7 +2,7 @@
 
 import { Boton } from "@mijornada/ui";
 import { useState, useTransition } from "react";
-import { invitar } from "../app/actions.ts";
+import { enviarInvitacion, invitar } from "../app/actions.ts";
 
 /** Genera el enlace personal para que la persona marque desde su celular y lo copia. */
 export function Invitar({ trabajadorId }: { trabajadorId: string }) {
@@ -42,6 +42,31 @@ export function Invitar({ trabajadorId }: { trabajadorId: string }) {
         <p className="text-nota break-all text-text-secondary select-all">{enlace}</p>
       ) : null}
       {mensaje ? <p className="text-nota text-text-secondary">{mensaje}</p> : null}
+      {enlace ? (
+        <form
+          className="flex flex-wrap items-center gap-(--espacio-xs)"
+          action={(formData) => {
+            const correo = formData.get("correo");
+            if (typeof correo !== "string") return;
+            start(async () => {
+              const resultado = await enviarInvitacion(trabajadorId, enlace, correo);
+              setMensaje(resultado.ok ?? resultado.error ?? null);
+            });
+          }}
+        >
+          <input
+            type="email"
+            name="correo"
+            required
+            placeholder="o envíaselo a su correo"
+            aria-label="Correo de la persona"
+            className="rounded-(--radio-md) border border-border-default bg-bg-surface px-(--espacio-sm) py-(--espacio-xs) text-pequeno"
+          />
+          <Boton type="submit" estilo="fantasma" disabled={generando}>
+            Enviar
+          </Boton>
+        </form>
+      ) : null}
     </div>
   );
 }

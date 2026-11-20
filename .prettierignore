@@ -11,3 +11,4 @@ packages/db/src/database.types.ts
 e2e/resultados
 docs/legal
 supabase/seeds/0002_plantillas_legales.sql
+infra/supabase-produccion/supabase/templates

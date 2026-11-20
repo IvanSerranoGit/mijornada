@@ -18,6 +18,7 @@ import {
 import type Stripe from "stripe";
 import { z } from "zod";
 import type { Ctx, Db } from "./context.ts";
+import type { Enviar } from "./correo.ts";
 import {
   getLogoDataUrl,
   listConsentimientos,
@@ -79,6 +80,8 @@ export interface Servicios {
   admin: () => Db;
   /** Cliente de Stripe; lanza 503 si el entorno no tiene la llave. */
   stripe: () => Stripe;
+  /** Envío de correo; devuelve false si no se pudo enviar. */
+  correo: Enviar;
 }
 
 export interface SemanaReporte {

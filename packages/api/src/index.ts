@@ -19,3 +19,5 @@ export * from "./schemas.ts";
 export * from "./documentos.ts";
 export * from "./incidencias.ts";
 export * from "./pagos.ts";
+export * from "./correo.ts";
+export * from "./usuarios.ts";

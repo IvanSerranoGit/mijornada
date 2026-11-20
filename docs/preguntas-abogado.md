@@ -198,3 +198,76 @@ Estados: **Abierta** · **Respondida** (anotar fecha, respuesta y qué se cambi�
   contra, o debe informarse expresamente en el aviso de privacidad y en el convenio?
 - **Qué asume hoy el sistema:** nunca bloquea la marca; solo la anota.
 - **Dónde cambia:** textos de consentimiento (sprint 3) y `jornada.evento.fuera_de_geocerca`.
+
+## Documentos, consentimiento y cobro (sprint 3)
+
+### 18. Firma electrónica simple y "prueba plena"
+
+- **Estado:** Abierta
+- **Pregunta:** El trabajador acepta el convenio de registro tecleando su nombre completo en la
+  aplicación; se guardan hora del servidor, IP, navegador, versión y huella del documento. ¿Basta
+  para que el registro "haga prueba plena" (art. 132 fr. XXXIV), o conviene exigir firma autógrafa
+  o constancia NOM-151 en la primera aceptación?
+- **Qué asume hoy el sistema:** la firma simple cuenta como aceptación; la autógrafa escaneada se
+  puede agregar y ambas se conservan.
+- **Dónde cambia:** `cumplimiento.consentimiento` (métodos) y `docs/documentos-y-consentimiento.md`.
+
+### 19. Aceptación en el kiosco
+
+- **Estado:** Abierta
+- **Pregunta:** En el kiosco la persona ve el aviso de privacidad simplificado y toca "Acepto y
+  marco" con su PIN. ¿Esa aceptación puede cubrir también el convenio de registro, que no se le
+  muestra completo ahí?
+- **Qué asume hoy el sistema:** el clic del kiosco cubre solo el aviso de privacidad; el convenio
+  queda pendiente hasta que lo firme en su celular o en papel.
+- **Dónde cambia:** `cumplimiento.kiosco_aceptar`.
+
+### 20. Trabajador que no acepta
+
+- **Estado:** Abierta
+- **Pregunta:** Si una persona no acepta el convenio, el sistema la deja seguir marcando (la
+  obligación de registrar es del patrón) y la muestra como "consentimiento pendiente". ¿Qué valor
+  probatorio tiene ese registro y qué debe hacer el patrón?
+- **Qué asume hoy el sistema:** nunca bloquea el marcaje; el reporte de inspección indica el
+  consentimiento pendiente y el patrón recibe recordatorios a los 3 y 7 días.
+- **Dónde cambia:** flujo de consentimiento de la PWA y el kiosco.
+
+### 21. Inconformidad del trabajador con una corrección
+
+- **Estado:** Abierta
+- **Pregunta:** Cuando el patrón corrige una marca y el trabajador manifiesta su inconformidad con
+  un comentario, la corrección se mantiene y ambas posturas quedan en el registro. ¿Es el
+  tratamiento correcto, o la corrección sin conformidad no debería contar para el cálculo de horas?
+- **Qué asume hoy el sistema:** la corrección aprobada cuenta; el reporte la marca "con
+  inconformidad del trabajador" y transcribe su comentario.
+- **Dónde cambia:** `cumplimiento.responder_incidencia` y `jornada.recalcular_dia`.
+
+### 22. Reporte y acceso del inspector
+
+- **Estado:** Abierta
+- **Pregunta:** ¿El contenido y el orden del reporte para inspección (registro diario, correcciones,
+  horas extra contra topes, consentimientos, acta de integridad) cubren lo que pide la autoridad?
+  ¿Es aceptable darle al inspector un enlace temporal de consulta en vez de (o además de) el PDF?
+- **Qué asume hoy el sistema:** PDF y CSV con huellas, enlace de 72 horas revocable y página
+  pública de verificación sin datos personales.
+- **Dónde cambia:** `docs/reportes.md`.
+
+### 23. Términos de servicio y contrato de encargo
+
+- **Estado:** Abierta
+- **Pregunta:** ¿La sección 7 de los términos de servicio basta como contrato de encargo entre el
+  cliente (responsable) e Inzotec (encargado) conforme a la LFPDPPP vigente, o debe ser un anexo
+  firmado aparte? Revisar también límite de responsabilidad, jurisdicción y reembolsos.
+- **Qué asume hoy el sistema:** se aceptan al crear la cuenta; versión 0.9 con leyenda de
+  preliminar.
+- **Dónde cambia:** `docs/legal/terminos-servicio-mijornada-v0.9.md` y
+  `docs/legal/aviso-privacidad-mijornada-v0.9.md`.
+
+### 24. Bloqueo por falta de pago
+
+- **Estado:** Abierta
+- **Pregunta:** Con la prueba vencida o 7 días después de un cobro fallido, la administración queda
+  en solo lectura, pero el personal sigue marcando y el patrón sigue generando reportes. ¿Hay algún
+  riesgo en restringir la administración de un registro que la ley obliga a llevar?
+- **Qué asume hoy el sistema:** nunca interrumpe el registro ni oculta datos.
+- **Dónde cambia:** `docs/planes-y-cobro.md` y `calculo.regla` (`dias_gracia_pago`).

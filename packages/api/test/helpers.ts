@@ -9,6 +9,7 @@ import {
   handleRequest,
   sesionFromClaims,
   type Ctx,
+  type Mensaje,
   type Servicios,
 } from "../src/index.ts";
 
@@ -106,12 +107,16 @@ export async function createActor(): Promise<Actor> {
  * Servicios de prueba: el "PDF" son los bytes del HTML (para poder leerlo) y el QR un SVG
  * mínimo. El navegador real se prueba en e2e.
  */
+/** Correos que "envió" la API durante las pruebas. */
+export const correosEnviados: Mensaje[] = [];
+
 export const servicios: Servicios = {
   pdf: (pagina) =>
     Promise.resolve(new TextEncoder().encode(`%PDF-prueba\n${pagina.cuerpoHtml}\n${pagina.pie}`)),
   qr: (texto) => Promise.resolve(`<svg data-qr="${texto}"></svg>`),
   admin: () => admin,
   stripe: () => createStripe(undefined),
+  correo: (mensaje) => (correosEnviados.push(mensaje), Promise.resolve(true)),
 };
 
 export async function callApi<T = unknown>(

@@ -34,8 +34,7 @@ El texto se renderiza **en dos pasos**:
    salto de página (`\f`) y el resumen. Un dato que falta queda como línea para llenar a
    mano (`________________`).
 2. **Al mostrar o imprimir**, con los datos de la persona y de su centro:
-   `nombre_trabajador`, `puesto`, `curp_trabajador` (siempre en blanco: la CURP se guarda
-   cifrada y es opcional), `centro_trabajo`, `metodo_marcaje`, `captura_foto`,
+   `nombre_trabajador`, `puesto`, `curp_trabajador`, `centro_trabajo`, `metodo_marcaje`, `captura_foto`,
    `captura_ubicacion`, `url_aviso_integral`, `hash_documento`, `fecha`.
 
 Cuándo nace una versión:
@@ -45,6 +44,15 @@ Cuándo nace una versión:
 - **Versión nueva**, desde el panel → Documentos: con los datos actuales de la empresa
   (plantilla vigente de Mi Jornada) o con el texto del abogado, que puede usar las mismas
   variables. Publicar deja **pendientes** los consentimientos de ese documento.
+
+La **CURP** se guarda cifrada con la llave del tenant. Para el convenio la descifra la
+base (`tenants.curp_de_trabajador`) solo para un administrador del tenant o para la propia
+persona; si no está registrada, queda la línea en blanco. El ejemplar en blanco nunca la
+lleva.
+
+RFC, domicilio y correo de privacidad se piden como opcionales en el paso 2 del alta.
+Mientras falte alguno, el panel muestra "Tus documentos tienen campos vacíos" con un
+enlace para completarlos.
 
 Guardar los datos del negocio (RFC, domicilio, contacto de privacidad) no cambia las
 versiones ya publicadas: hay que publicar una versión nueva para que aparezcan.

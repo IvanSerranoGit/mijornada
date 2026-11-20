@@ -1,7 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
-    { "path": "/api/cron/purga-fotos", "schedule": "0 9 * * *" },
-    { "path": "/api/cron/mantener-activo", "schedule": "0 12 * * *" }
+    {
+      "path": "/api/cron/mantener-activo",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/diario",
+      "schedule": "0 14 * * *"
+    }
   ]
 }

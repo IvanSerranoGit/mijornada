@@ -52,7 +52,9 @@ Las horas se muestran en la zona horaria de cada centro.
 | `hash_contenido` | SHA-256 de `eventos.csv`, byte por byte                                                                                        | Carátula, pie de cada página, página de verificación |
 | `hash_raiz`      | Raíz Merkle de los hashes de los eventos del reporte, en orden de `(ts_servidor, id)` (misma construcción que el sello diario) | Carátula, página de verificación                     |
 
-Quien reciba el CSV puede calcular su SHA-256 y compararlo con el del PDF.
+Quien reciba el CSV puede calcular su SHA-256 y compararlo con el del PDF. La carátula
+lleva una nota que explica qué es cada huella y cómo comprobarla
+(`shasum -a 256 eventos.csv`).
 
 ## Verificación pública
 

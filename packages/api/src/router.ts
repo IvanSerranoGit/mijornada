@@ -10,6 +10,7 @@ import * as i from "./incidencias.ts";
 import * as p from "./pagos.ts";
 import * as r from "./reportes.ts";
 import * as s from "./schemas.ts";
+import * as u from "./usuarios.ts";
 
 type Metodo = "GET" | "POST" | "PATCH";
 
@@ -149,6 +150,24 @@ export const RUTAS: Ruta[] = [
     etiqueta: "Usuarios",
     resumen: "Usuarios del tenant.",
     handler: (ctx) => h.listUsuarios(ctx),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/usuarios",
+    etiqueta: "Usuarios",
+    resumen:
+      "Invita a un administrador o supervisor: lo da de alta y le envía un enlace para fijar su contraseña.",
+    body: u.usuarioInvitar,
+    status: 201,
+    handler: (ctx, { body, meta }) => u.inviteUsuario(ctx, body, meta.servicios, meta.origin),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/equipo",
+    etiqueta: "Usuarios",
+    resumen:
+      "Dueño, administradores y supervisores, con su correo y si su invitación sigue pendiente.",
+    handler: (ctx) => u.listEquipo(ctx),
   }),
   ruta({
     metodo: "PATCH",
@@ -459,6 +478,7 @@ const SIN_SERVICIOS: r.Servicios = {
   qr: sinServicio,
   admin: sinServicio,
   stripe: () => p.createStripe(undefined),
+  correo: () => Promise.resolve(false),
 };
 
 export interface HandleOptions {

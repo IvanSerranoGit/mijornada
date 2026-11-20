@@ -9,6 +9,7 @@ const SECCIONES = [
   { href: "/panel/incidencias", titulo: "Incidencias" },
   { href: "/panel/documentos", titulo: "Documentos" },
   { href: "/panel/reportes", titulo: "Reportes" },
+  { href: "/panel/equipo", titulo: "Equipo" },
   { href: "/panel/plan", titulo: "Plan" },
 ] as const;
 

@@ -677,7 +677,27 @@ isOneToOne: false
           }
         },"tenants": {
           Tables: {
-            "centro_trabajo": {
+            "aviso_enviado": {
+                  Row: {
+                    "clave": string,"enviado_en": string,"tenant_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "clave": string,"enviado_en"?: string,"tenant_id": string
+                  }
+                  Update: {
+                    "clave"?: string,"enviado_en"?: string,"tenant_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "aviso_enviado_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "empresa"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"centro_trabajo": {
                   Row: {
                     "creado_en": string,"direccion": string | null,"foto_en_kiosco": boolean,"foto_en_telefono": boolean,"id": string,"lat": number | null,"lng": number | null,"metodo_marcaje": string | null,"nombre": string,"pin_admin_hash": string | null,"radio_m": number | null,"tenant_id": string,"zona_horaria": string
                   }
@@ -879,6 +899,32 @@ isOneToOne: false
       referencedColumns: ["tenant_id","id"]
     }
                   ]
+                },"invitacion_usuario": {
+                  Row: {
+                    "aceptada_en": string | null,"creado_en": string,"expira_en": string,"tenant_id": string,"token_hash": string,"usuario_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "aceptada_en"?: string | null,"creado_en"?: string,"expira_en"?: string,"tenant_id": string,"token_hash": string,"usuario_id": string
+                  }
+                  Update: {
+                    "aceptada_en"?: string | null,"creado_en"?: string,"expira_en"?: string,"tenant_id"?: string,"token_hash"?: string,"usuario_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invitacion_usuario_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "empresa"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invitacion_usuario_usuario_id_fkey"
+      columns: ["usuario_id"]
+isOneToOne: true
+      referencedRelation: "usuario"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"limite_api": {
                   Row: {
                     "peticiones": number,"tenant_id": string,"ventana": string
@@ -968,6 +1014,11 @@ isOneToOne: false
                            },
 "aplicar_evento_stripe":
 { Args: { "p_ciclo": string,"p_customer_id": string,"p_evento_id": string,"p_pago_fallido": boolean,"p_plan": string,"p_plan_hasta": string,"p_subscription_id": string,"p_tenant_id": string,"p_tipo": string }; Returns: boolean
+                           },
+"avisos_pendientes":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "clave": string,"correo": string,"datos": Json,"tenant_id": string,"tipo": string
+            }[]
                            },
 "centro_de_trabajador":
 { Args: { "p_trabajador_id": string }; Returns: string
@@ -1059,6 +1110,11 @@ isOneToOne: false
 "hash_token":
 { Args: { "p_token": string }; Returns: string
                            },
+"invitacion_de_usuario":
+{ Args: { "p_token": string }; Returns: {
+              "auth_user_id": string,"correo": string,"empresa": string,"rol": string,"usuario_id": string
+            }[]
+                           },
 "invitacion_info":
 { Args: { "p_token": string }; Returns: {
               "empresa": string,"nombre": string
@@ -1128,6 +1184,11 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"usuarios_del_tenant":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "activo": boolean,"centro_id": string,"correo": string,"creado_en": string,"id": string,"invitacion_pendiente": boolean,"nombre": string,"rol": string,"trabajador_id": string
+            }[]
+                           },
 "verificar_pin":
 { Args: { "p_pin": string,"p_trabajador_id": string }; Returns: boolean
                            },

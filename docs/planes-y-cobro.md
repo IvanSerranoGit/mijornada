@@ -22,12 +22,17 @@ mismo código sirve en modo de prueba y en modo real.
 `tenants.estado_de_cuenta(tenant)` (API: `GET /api/v1/cuenta`) devuelve el plan, el límite,
 las personas activas y el **acceso**:
 
-| Situación                          | Acceso         | Motivo                                            |
-| ---------------------------------- | -------------- | ------------------------------------------------- |
-| Prueba vigente o plan al corriente | `completo`     | —                                                 |
-| Prueba vencida sin plan            | `solo_lectura` | `prueba_vencida`                                  |
-| Cobro fallido                      | `solo_lectura` | `pago_fallido`                                    |
-| Suscripción cancelada              | `solo_lectura` | `prueba_vencida` (vuelve a "prueba" ya consumida) |
+| Situación                          | Acceso                                                        | Motivo                                            |
+| ---------------------------------- | ------------------------------------------------------------- | ------------------------------------------------- |
+| Prueba vigente o plan al corriente | `completo`                                                    | —                                                 |
+| Prueba vencida sin plan            | `solo_lectura`                                                | `prueba_vencida`                                  |
+| Cobro fallido, dentro de la gracia | `completo`, con aviso en el panel y por correo (día 0, 3 y 6) | —                                                 |
+| Cobro fallido, vencida la gracia   | `solo_lectura`                                                | `pago_fallido`                                    |
+| Suscripción cancelada              | `solo_lectura`                                                | `prueba_vencida` (vuelve a "prueba" ya consumida) |
+
+La gracia tras un cobro fallido son los días de `calculo.regla` → `dias_gracia_pago` (hoy
+**7**; `supabase/seeds/0004_regla_gracia_pago.sql`). `estado_de_cuenta` devuelve
+`pago_fallido_en` y `gracia_hasta`.
 
 En **solo lectura** la API responde `402 solo_lectura` a la administración: altas y cambios
 de personas, centros, horarios, documentos, kioscos, invitaciones y usuarios

@@ -83,9 +83,12 @@ La forma canónica del hash y sus versiones (1, 2 y 3) están en
 
 ## Aplicaciones y API
 
-- **`apps/web`**: registro e inicio de sesión del patrón, alta en 6 pasos (`/onboarding`), panel
-  (`/panel`) y la PWA del trabajador (`/app`, instalable). Monta la API en `/api/v1` y sirve su
-  contrato en `/api/v1/openapi.json`.
+- **`apps/web`**: página de inicio pública (`/`, con `/terminos` y `/privacidad`), registro e
+  inicio de sesión del patrón, alta en 6 pasos (`/onboarding`), panel (`/panel`: inicio,
+  incidencias, documentos, reportes, equipo y plan) y la PWA del trabajador (`/app`, instalable:
+  marcaje, documentos e incidencias). También las páginas con enlace: `/inspector`,
+  `/verificar/<token>`, `/aviso/<centro>` e `/invitacion-usuario/<token>`. Monta la API en
+  `/api/v1` y sirve su contrato en `/api/v1/openapi.json`.
 - **`apps/kiosco`**: tablet del negocio. Se vincula con un código de 8 caracteres y marca con PIN o
   QR; su API vive en `/api/v1/kiosco` y se autentica con el token del dispositivo.
 - **`packages/api`**: esquemas Zod, handlers puros y adaptador HTTP. Las pantallas llaman a los
@@ -101,7 +104,20 @@ Cómo se calcula el día laboral (`jornada.dia_laboral`): cuenta la hora del dis
 la zona horaria del centro; una jornada que cruza la medianoche pertenece al día en que empezó. Se
 recalcula solo al insertar cada evento y se puede reconstruir con `jornada.recalcular_rango`.
 
-Cómo funciona el marcaje sin conexión, la foto y el diagnóstico de dispositivos: [docs/marcaje-sin-conexion.md](docs/marcaje-sin-conexion.md).
+### Documentación por área
+
+| Área                                                     | Documento                                                                  |
+| -------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Marcaje sin conexión, foto y diagnóstico de dispositivos | [docs/marcaje-sin-conexion.md](docs/marcaje-sin-conexion.md)               |
+| Hash encadenado y sus versiones                          | [docs/hash-encadenado.md](docs/hash-encadenado.md)                         |
+| Documentos legales, PDF y consentimiento                 | [docs/documentos-y-consentimiento.md](docs/documentos-y-consentimiento.md) |
+| Incidencias y correcciones                               | [docs/incidencias.md](docs/incidencias.md)                                 |
+| Reporte para inspección, inspector y verificación        | [docs/reportes.md](docs/reportes.md)                                       |
+| Planes, prueba, gracia de pago y Stripe                  | [docs/planes-y-cobro.md](docs/planes-y-cobro.md)                           |
+| Correo y avisos diarios                                  | [docs/correo.md](docs/correo.md)                                           |
+| Usuarios, roles e invitaciones                           | [docs/usuarios.md](docs/usuarios.md)                                       |
+| Preguntas pendientes para el abogado                     | [docs/preguntas-abogado.md](docs/preguntas-abogado.md)                     |
+| Textos legales v0.9                                      | [docs/legal/](docs/legal/)                                                 |
 
 ## Estructura
 
@@ -158,12 +174,18 @@ Las vistas previas usan la base de producción: no las uses para pruebas que dej
 
 Variables de entorno en Vercel (producción y preview): `NEXT_PUBLIC_SUPABASE_URL`,
 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` en ambos proyectos; además, en
-`mijornada`: `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_KIOSCO_URL`, `NEXT_PUBLIC_AUTH_GOOGLE` y
-`CRON_SECRET`. La contraseña de la base y la referencia del proyecto no están en el repo.
+`mijornada`: `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_KIOSCO_URL`, `NEXT_PUBLIC_AUTH_GOOGLE`,
+`CRON_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY` y `CORREO_REMITENTE`
+(sin las de Stripe el cobro responde "no disponible"; sin la de Resend no se envía correo). La contraseña de la base y la referencia del proyecto no están en el repo.
 
 Tareas programadas: pg_cron en Supabase (particiones mensuales, sello diario, limpieza del límite
-de peticiones) y Vercel Cron en `apps/web/vercel.json` (purga de fotos a 90 días y una consulta
-diaria que evita que el plan gratuito pause el proyecto).
+de peticiones) y Vercel Cron en `apps/web/vercel.json`: `/api/cron/diario` (purga de fotos a 90
+días, avisos por correo y ajuste de personas adicionales en Stripe) y una consulta diaria que evita
+que el plan gratuito pause el proyecto.
+
+Seeds (`supabase/seeds`, idempotentes; se aplican con `pnpm db:seed` o `supabase db push
+--include-seed`): reglas de cálculo, plantillas legales (generado con `pnpm db:seed:legal` a partir
+de `docs/legal`), plazo para reportar incidencias y días de gracia de pago.
 
 ### Pendientes de producción
 
