@@ -6,6 +6,7 @@ import { ApiError, errorResponseFrom, fromDatabase, noAutenticado } from "./erro
 import * as d from "./documentos.ts";
 import * as h from "./handlers.ts";
 import * as i from "./incidencias.ts";
+import * as r from "./reportes.ts";
 import * as s from "./schemas.ts";
 
 type Metodo = "GET" | "POST" | "PATCH";
@@ -16,6 +17,8 @@ export interface Meta {
   origen: d.Origen;
   /** Origen público del sitio (`https://mijornada.xyz`), para armar enlaces. */
   origin: string;
+  /** PDF, QR y cliente de servicio que aporta el servidor que monta la API. */
+  servicios: r.Servicios;
 }
 
 interface Entrada {
@@ -329,6 +332,61 @@ export const RUTAS: Ruta[] = [
   }),
   ruta({
     metodo: "GET",
+    ruta: "/reportes",
+    etiqueta: "Reportes",
+    resumen: "Reportes generados, del más reciente al más antiguo.",
+    handler: (ctx) => r.listReportes(ctx),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/reportes",
+    etiqueta: "Reportes",
+    resumen:
+      "Genera un reporte (inspección, periodo o trabajador): PDF y CSV en el bucket reportes, con sus huellas.",
+    body: r.reporteCrear,
+    status: 201,
+    handler: (ctx, { body, meta }) => r.createReporte(ctx, body, meta.servicios, meta.origin),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/reportes/{id}/verificacion",
+    etiqueta: "Reportes",
+    resumen: "Verifica la cadena de hashes de cada persona del reporte en su periodo.",
+    handler: (ctx, { params }) => r.verifyReporte(ctx, param(params, "id")),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/reportes/{id}/accesos",
+    etiqueta: "Reportes",
+    resumen: "Accesos de inspector de un reporte.",
+    handler: (ctx, { params }) => r.listAccesosInspector(ctx, param(params, "id")),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/reportes/{id}/accesos",
+    etiqueta: "Reportes",
+    resumen:
+      "Crea un enlace temporal de inspector (72 h, revocable). El enlace solo se muestra una vez.",
+    status: 201,
+    handler: (ctx, { params, meta }) =>
+      r.createAccesoInspector(ctx, param(params, "id"), meta.servicios, meta.origin),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/reportes/{id}/consultas",
+    etiqueta: "Reportes",
+    resumen: "Consultas y descargas del inspector sobre un reporte, con IP y hora.",
+    handler: (ctx, { params }) => r.listConsultasInspector(ctx, param(params, "id")),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/accesos-inspector/{id}/revocacion",
+    etiqueta: "Reportes",
+    resumen: "Revoca un acceso de inspector.",
+    handler: (ctx, { params }) => r.revokeAccesoInspector(ctx, param(params, "id")),
+  }),
+  ruta({
+    metodo: "GET",
     ruta: "/consentimientos",
     etiqueta: "Documentos",
     resumen:
@@ -358,6 +416,11 @@ function json(status: number, body: unknown): Response {
 
 export const errorResponse = errorResponseFrom;
 
+const sinServicio = (): never => {
+  throw new ApiError(501, "no_disponible", "Este servidor no puede generar reportes.");
+};
+const SIN_SERVICIOS: r.Servicios = { pdf: sinServicio, qr: sinServicio, admin: sinServicio };
+
 export interface HandleOptions {
   /** Contexto de quien llama, o null si no hay sesión válida. */
   getCtx: () => Promise<Ctx | null>;
@@ -365,6 +428,8 @@ export interface HandleOptions {
   limitePorMinuto?: number;
   /** Origen público del sitio; por defecto, el de la petición. */
   origin?: string;
+  /** PDF, QR y cliente de servicio. Sin ellos, las rutas que los necesitan responden 501. */
+  servicios?: r.Servicios;
 }
 
 /** Atiende una petición a /api/v1/<segments>. */
@@ -419,6 +484,7 @@ export async function handleRequest(
     const meta: Meta = {
       origen: d.origenDe(request.headers),
       origin: options.origin ?? new URL(request.url).origin,
+      servicios: options.servicios ?? SIN_SERVICIOS,
     };
     return json(r.status ?? 200, await r.handler(ctx, { params, query, body, meta }));
   } catch (error) {

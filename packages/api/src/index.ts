@@ -11,6 +11,8 @@ export * from "./errors.ts";
 export * from "./handlers.ts";
 export * from "./kiosco.ts";
 export * from "./openapi.ts";
+export * from "./reporte-html.ts";
+export * from "./reportes.ts";
 export * from "./router.ts";
 export * from "./schemas.ts";
 export * from "./documentos.ts";

@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import type { Database } from "@mijornada/db/types";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { handleRequest, sesionFromClaims, type Ctx } from "../src/index.ts";
+import { handleRequest, sesionFromClaims, type Ctx, type Servicios } from "../src/index.ts";
 
 interface Status {
   API_URL: string;
@@ -96,6 +96,17 @@ export async function createActor(): Promise<Actor> {
   };
 }
 
+/**
+ * Servicios de prueba: el "PDF" son los bytes del HTML (para poder leerlo) y el QR un SVG
+ * mínimo. El navegador real se prueba en e2e.
+ */
+export const servicios: Servicios = {
+  pdf: (pagina) =>
+    Promise.resolve(new TextEncoder().encode(`%PDF-prueba\n${pagina.cuerpoHtml}\n${pagina.pie}`)),
+  qr: (texto) => Promise.resolve(`<svg data-qr="${texto}"></svg>`),
+  admin: () => admin,
+};
+
 export async function callApi<T = unknown>(
   method: string,
   ruta: string,
@@ -112,9 +123,7 @@ export async function callApi<T = unknown>(
   const response = await handleRequest(
     request,
     url.pathname.replace("/api/v1", "").split("/").filter(Boolean),
-    {
-      getCtx,
-    },
+    { getCtx, origin: "https://mijornada.test", servicios },
   );
   return { status: response.status, body: (await response.json()) as T };
 }

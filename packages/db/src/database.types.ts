@@ -56,14 +56,14 @@ export type Database = {
           Tables: {
             "acceso_inspector": {
                   Row: {
-                    "creado_en": string,"creado_por": string,"expira_en": string,"id": string,"reporte_id": string,"revocado_en": string | null,"tenant_id": string,"usuario_id": string
+                    "creado_en": string,"creado_por": string,"expira_en": string,"id": string,"reporte_id": string,"revocado_en": string | null,"tenant_id": string,"token_hash": string | null,"usuario_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "creado_en"?: string,"creado_por": string,"expira_en"?: string,"id"?: string,"reporte_id": string,"revocado_en"?: string | null,"tenant_id": string,"usuario_id": string
+                    "creado_en"?: string,"creado_por": string,"expira_en"?: string,"id"?: string,"reporte_id": string,"revocado_en"?: string | null,"tenant_id": string,"token_hash"?: string | null,"usuario_id": string
                   }
                   Update: {
-                    "creado_en"?: string,"creado_por"?: string,"expira_en"?: string,"id"?: string,"reporte_id"?: string,"revocado_en"?: string | null,"tenant_id"?: string,"usuario_id"?: string
+                    "creado_en"?: string,"creado_por"?: string,"expira_en"?: string,"id"?: string,"reporte_id"?: string,"revocado_en"?: string | null,"tenant_id"?: string,"token_hash"?: string | null,"usuario_id"?: string
                   }
                   Relationships: [
                     {
@@ -138,14 +138,16 @@ isOneToOne: false
                   ]
                 },"reporte": {
                   Row: {
-                    "centro_id": string | null,"generado_en": string,"hash_contenido": string,"id": string,"rango": unknown,"solicitante": string,"tenant_id": string,"tipo": string,"url_csv": string | null,"url_pdf": string | null
+                    "centro_id": string | null,"generado_en": string,"hash_contenido": string,"hash_raiz": string | null,"id": string,"n_eventos": number | null,"rango": unknown,"solicitante": string,"tenant_id": string,"tipo": string,"token_hash": string | null,"trabajador_ids": (string)[] | null,"url_csv": string | null,"url_csv_dias": string | null,"url_pdf": string | null,"cadenas_de_reporte": {
+              "evento_roto_id": string,"evento_roto_ts": string,"integra": boolean,"motivo": string,"n_eventos": number,"trabajador_id": string
+            } | null
                   }
-                  ComputedFields: never
+                  ComputedFields: "cadenas_de_reporte"
                   Insert: {
-                    "centro_id"?: string | null,"generado_en"?: string,"hash_contenido": string,"id"?: string,"rango": unknown,"solicitante": string,"tenant_id": string,"tipo": string,"url_csv"?: string | null,"url_pdf"?: string | null
+                    "centro_id"?: string | null,"generado_en"?: string,"hash_contenido": string,"hash_raiz"?: string | null,"id"?: string,"n_eventos"?: number | null,"rango": unknown,"solicitante": string,"tenant_id": string,"tipo": string,"token_hash"?: string | null,"trabajador_ids"?: (string)[] | null,"url_csv"?: string | null,"url_csv_dias"?: string | null,"url_pdf"?: string | null
                   }
                   Update: {
-                    "centro_id"?: string | null,"generado_en"?: string,"hash_contenido"?: string,"id"?: string,"rango"?: unknown,"solicitante"?: string,"tenant_id"?: string,"tipo"?: string,"url_csv"?: string | null,"url_pdf"?: string | null
+                    "centro_id"?: string | null,"generado_en"?: string,"hash_contenido"?: string,"hash_raiz"?: string | null,"id"?: string,"n_eventos"?: number | null,"rango"?: unknown,"solicitante"?: string,"tenant_id"?: string,"tipo"?: string,"token_hash"?: string | null,"trabajador_ids"?: (string)[] | null,"url_csv"?: string | null,"url_csv_dias"?: string | null,"url_pdf"?: string | null
                   }
                   Relationships: [
                     
@@ -185,6 +187,11 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"acceso_inspector_por_token":
+{ Args: { "p_token": string }; Returns: {
+              "correo": string,"expira_en": string,"reporte_id": string
+            }[]
+                           },
 "aceptar_documento":
 { Args: { "p_documento_id": string,"p_ip"?: unknown,"p_nombre": string,"p_user_agent"?: string }; Returns: {
               "aceptado_en": string,"consentimiento_id": string,"evidencia_hash": string
@@ -198,9 +205,37 @@ isOneToOne: false
               "contenido_md": string,"foto_en_kiosco": boolean,"foto_en_telefono": boolean,"metodo_marcaje": string,"razon_social": string,"version": number,"vigente_desde": string
             }[]
                            },
+"cadenas_de_reporte":
+{ Args: { "p_reporte": Omit<Database["cumplimiento"]['Tables']["reporte"]['Row'], Database["cumplimiento"]['Tables']["reporte"]['ComputedFields']> }; Returns: {
+              "evento_roto_id": string,"evento_roto_ts": string,"integra": boolean,"motivo": string,"n_eventos": number,"trabajador_id": string
+            }[]
+                           },
 "calcular_evidencia":
 { Args: { "p_aceptado_en": string,"p_documento_hash": string,"p_ip": unknown,"p_nombre_tecleado": string,"p_trabajador_id": string }; Returns: string
                            },
+"consultas_de_inspector":
+{ Args: { "p_reporte_id": string }; Returns: {
+              "accion": string,"ip": unknown,"ts": string
+            }[]
+                           },
+"crear_acceso_inspector":
+{ Args: { "p_auth_user_id": string,"p_reporte_id": string,"p_token_hash": string }; Returns: {
+              "creado_en": string,
+"creado_por": string,
+"expira_en": string,
+"id": string,
+"reporte_id": string,
+"revocado_en": string | null,
+"tenant_id": string,
+"token_hash": string | null,
+"usuario_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "acceso_inspector"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "documentos_vigentes":
 { Args: { "p_tenant_id": string }; Returns: {
               "contenido_hash": string,
@@ -265,11 +300,43 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"registrar_consulta_inspector":
+{ Args: { "p_accion": string,"p_ip"?: unknown,"p_reporte_id": string }; Returns: undefined
+                           },
+"registrar_reporte":
+{ Args: { "p_centro_id": string,"p_desde": string,"p_hash_contenido": string,"p_hash_raiz": string,"p_hasta": string,"p_id": string,"p_n_eventos": number,"p_tipo": string,"p_token_hash": string,"p_trabajador_ids": (string)[],"p_url_csv": string,"p_url_csv_dias": string,"p_url_pdf": string }; Returns: {
+              "centro_id": string | null,
+"generado_en": string,
+"hash_contenido": string,
+"hash_raiz": string | null,
+"id": string,
+"n_eventos": number | null,
+"rango": unknown,
+"solicitante": string,
+"tenant_id": string,
+"tipo": string,
+"token_hash": string | null,
+"trabajador_ids": (string)[] | null,
+"url_csv": string | null,
+"url_csv_dias": string | null,
+"url_pdf": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "reporte"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "resolver_incidencia":
 { Args: { "p_aprobar": boolean,"p_incidencia_id": string }; Returns: string
                            },
 "responder_incidencia":
 { Args: { "p_comentario"?: string,"p_conforme": boolean,"p_incidencia_id": string }; Returns: string
+                           },
+"verificacion_publica":
+{ Args: { "p_token": string }; Returns: {
+              "cadenas": number,"desde": string,"dias_sellados": number,"eventos": number,"eventos_al_generar": number,"generado_en": string,"hash_contenido": string,"hash_raiz": string,"hasta": string,"integra": boolean,"tipo": string,"ultimo_sello": string
+            }[]
                            },
 "verificar_reporte":
 { Args: { "p_reporte_id": string }; Returns: {

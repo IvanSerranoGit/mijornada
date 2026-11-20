@@ -1,4 +1,5 @@
 import "server-only";
+import type { PaginaPdf } from "@mijornada/api";
 import type { Browser } from "playwright-core";
 
 // PDF con Playwright (Chromium sin interfaz). En Vercel el navegador viene de
@@ -15,19 +16,6 @@ async function launch(): Promise<Browser> {
     });
   }
   return chromium.launch({ headless: true });
-}
-
-export interface PaginaPdf {
-  /** Título del documento (metadatos y encabezado). */
-  titulo: string;
-  /** Cuerpo en HTML ya saneado (sale de markdownToHtml o de plantillas propias). */
-  cuerpoHtml: string;
-  /** Línea al pie de cada página, junto al número de página. */
-  pie: string;
-  /** Logo de la empresa como data URL; si falta, el de Mi Jornada. */
-  logo?: string;
-  /** CSS adicional para ese documento. */
-  estilos?: string;
 }
 
 const escapar = (texto: string) =>
