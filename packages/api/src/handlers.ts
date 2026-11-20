@@ -41,13 +41,13 @@ function paginate<T extends { id: string }>(rows: T[], limite: number): Pagina<T
 }
 
 /** Quita las llaves con valor undefined (Zod las deja en los objetos parciales). */
-function defined<T extends object>(value: T): { [K in keyof T]: Exclude<T[K], undefined> } {
+export function defined<T extends object>(value: T): { [K in keyof T]: Exclude<T[K], undefined> } {
   return Object.fromEntries(Object.entries(value).filter(([, v]) => v !== undefined)) as {
     [K in keyof T]: Exclude<T[K], undefined>;
   };
 }
 
-function requireTenant(ctx: Ctx): string {
+export function requireTenant(ctx: Ctx): string {
   if (ctx.sesion.tenantId === null) {
     throw new ApiError(409, "sin_empresa", "Tu cuenta todavía no tiene una empresa.");
   }

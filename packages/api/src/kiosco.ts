@@ -1,9 +1,10 @@
 // API del kiosco. El kiosco no tiene sesión de usuario: su credencial es el token
 // de dispositivo que recibe al canjear el código de enlace.
-import { bytesToHex, sha256 } from "@mijornada/dominio";
+import { bytesToHex, markdownToHtml, renderTemplate, sha256 } from "@mijornada/dominio";
 import { z } from "zod";
 import type { Db } from "./context.ts";
 import { ApiError, errorResponseFrom, fromDatabase } from "./errors.ts";
+import { origenDe, varsCentro, type Origen } from "./documentos.ts";
 import { fotoEstadoDeclarado, fotoMotivo } from "./schemas.ts";
 
 export const kioscoVincular = z.object({
@@ -31,6 +32,23 @@ export const kioscoMarcar = z
     foto_motivo: fotoMotivo.optional(),
   })
   .refine((v) => v.pin !== undefined || v.qr !== undefined, "Falta el PIN o el código QR.");
+
+const credencial = {
+  pin: z
+    .string()
+    .regex(/^\d{4}$/, "El PIN son 4 dígitos.")
+    .optional(),
+  qr: z.string().min(16).max(200).optional(),
+};
+const conCredencial = (v: { pin?: string | undefined; qr?: string | undefined }) =>
+  v.pin !== undefined || v.qr !== undefined;
+
+export const kioscoAviso = z
+  .object(credencial)
+  .refine(conCredencial, "Falta el PIN o el código QR.");
+export const kioscoAceptar = z
+  .object({ ...credencial, documento_id: z.uuid() })
+  .refine(conCredencial, "Falta el PIN o el código QR.");
 
 export const kioscoDesvincular = z.object({
   pin_admin: z.string().regex(/^\d{6}$/, "El PIN son 6 dígitos."),
@@ -72,6 +90,57 @@ export async function marcarEnKiosco(publico: Db, token: string, input: KioscoMa
   const marca = data[0];
   if (marca === undefined) throw new ApiError(500, "error_interno", "No se registró el marcaje.");
   return marca;
+}
+
+/**
+ * Antes de marcar: ¿esta persona tiene pendiente el aviso de privacidad? Si lo tiene,
+ * devuelve el aviso simplificado listo para mostrar.
+ */
+export async function avisoPendienteKiosco(
+  publico: Db,
+  token: string,
+  input: z.infer<typeof kioscoAviso>,
+  origin: string,
+) {
+  const { data, error } = await publico.schema("cumplimiento").rpc("kiosco_aviso_pendiente", {
+    p_token: token,
+    ...(input.pin === undefined ? {} : { p_pin: input.pin }),
+    ...(input.qr === undefined ? {} : { p_qr: input.qr }),
+  });
+  if (error) throw fromDatabase(error);
+  const aviso = data[0];
+  // Una empresa sin documentos todavía no tiene nada que aceptar.
+  if (aviso === undefined || !aviso.pendiente) return { pendiente: false as const };
+  const vars = varsCentro({ ...aviso, id: aviso.centro_id, nombre: "" }, origin);
+  return {
+    pendiente: true as const,
+    nombre: aviso.nombre,
+    documento_id: aviso.documento_id,
+    version: aviso.version,
+    resumen_html: markdownToHtml(renderTemplate(aviso.resumen_md, vars)),
+  };
+}
+
+/** "Acepto y marco": registra con método clic la aceptación del aviso de privacidad. */
+export async function aceptarEnKiosco(
+  publico: Db,
+  token: string,
+  input: z.infer<typeof kioscoAceptar>,
+  origen: Origen,
+) {
+  const { data, error } = await publico.schema("cumplimiento").rpc("kiosco_aceptar", {
+    p_token: token,
+    p_documento_id: input.documento_id,
+    ...(input.pin === undefined ? {} : { p_pin: input.pin }),
+    ...(input.qr === undefined ? {} : { p_qr: input.qr }),
+    ...(origen.ip === null ? {} : { p_ip: origen.ip }),
+    ...(origen.userAgent === null ? {} : { p_user_agent: origen.userAgent }),
+  });
+  if (error) throw fromDatabase(error);
+  const aceptacion = data[0];
+  if (aceptacion === undefined)
+    throw new ApiError(500, "error_interno", "No se registró la aceptación.");
+  return aceptacion;
 }
 
 export async function desvincularKiosco(publico: Db, token: string, pinAdmin: string) {
@@ -126,6 +195,8 @@ export interface KioscoOptions {
   publico: Db;
   /** Cliente con rol de servicio: solo para guardar fotos. */
   admin: () => Db;
+  /** Origen público de la app web (los enlaces del aviso apuntan ahí). */
+  origin?: string;
 }
 
 /** Atiende /api/v1/kiosco/<segments>. El token viaja en `Authorization: Bearer`. */
@@ -152,6 +223,18 @@ export async function handleKioscoRequest(
       return json(
         200,
         await marcarEnKiosco(options.publico, token, kioscoMarcar.parse(await request.json())),
+      );
+    }
+    if (ruta === "POST /aviso") {
+      const input = kioscoAviso.parse(await request.json());
+      const origin = options.origin ?? new URL(request.url).origin;
+      return json(200, await avisoPendienteKiosco(options.publico, token, input, origin));
+    }
+    if (ruta === "POST /aviso/aceptar") {
+      const input = kioscoAceptar.parse(await request.json());
+      return json(
+        201,
+        await aceptarEnKiosco(options.publico, token, input, origenDe(request.headers)),
       );
     }
     if (ruta === "POST /desvincular") {

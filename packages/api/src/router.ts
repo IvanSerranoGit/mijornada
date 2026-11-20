@@ -3,15 +3,25 @@
 import { z } from "zod";
 import type { Ctx } from "./context.ts";
 import { ApiError, errorResponseFrom, fromDatabase, noAutenticado } from "./errors.ts";
+import * as d from "./documentos.ts";
 import * as h from "./handlers.ts";
 import * as s from "./schemas.ts";
 
 type Metodo = "GET" | "POST" | "PATCH";
 
+/** Datos de la petición que no vienen del cliente como datos: los deriva el servidor. */
+export interface Meta {
+  /** IP y navegador de quien llama (evidencia de las aceptaciones). */
+  origen: d.Origen;
+  /** Origen público del sitio (`https://mijornada.xyz`), para armar enlaces. */
+  origin: string;
+}
+
 interface Entrada {
   params: Record<string, string>;
   query: unknown;
   body: unknown;
+  meta: Meta;
 }
 
 export interface Ruta {
@@ -40,7 +50,7 @@ function ruta<Q extends z.ZodType = z.ZodUnknown, B extends z.ZodType = z.ZodUnk
   status?: number;
   handler: (
     ctx: Ctx,
-    entrada: { params: Record<string, string>; query: z.infer<Q>; body: z.infer<B> },
+    entrada: { params: Record<string, string>; query: z.infer<Q>; body: z.infer<B>; meta: Meta },
   ) => Promise<unknown>;
 }): Ruta {
   return def as Ruta;
@@ -238,6 +248,49 @@ export const RUTAS: Ruta[] = [
     query: s.reglasPorFecha,
     handler: (ctx, { query }) => h.listReglas(ctx, query.fecha),
   }),
+  ruta({
+    metodo: "GET",
+    ruta: "/documentos",
+    etiqueta: "Documentos",
+    resumen: "Versiones del convenio de registro y del aviso de privacidad de la empresa.",
+    handler: (ctx) => d.listDocumentos(ctx),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/documentos",
+    etiqueta: "Documentos",
+    resumen:
+      "Publica una versión nueva de un documento (con texto propio o con la plantilla de Mi Jornada). Deja pendientes los consentimientos.",
+    body: d.documentoPublicar,
+    status: 201,
+    handler: (ctx, { body }) => d.publishDocumento(ctx, body),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/documentos/mios",
+    etiqueta: "Documentos",
+    resumen:
+      "Documentos vigentes del trabajador que llama, listos para leer, con su estado de aceptación.",
+    handler: (ctx, { meta }) => d.getMisDocumentos(ctx, meta.origin),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/documentos/{id}/aceptacion",
+    etiqueta: "Documentos",
+    resumen: "Firma simple: el trabajador acepta la versión vigente tecleando su nombre completo.",
+    body: d.documentoAceptar,
+    status: 201,
+    handler: (ctx, { params, body, meta }) =>
+      d.acceptDocumento(ctx, param(params, "id"), body.nombre, meta.origen),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/consentimientos",
+    etiqueta: "Documentos",
+    resumen:
+      "Estado del consentimiento de cada trabajador activo frente a los documentos vigentes.",
+    handler: (ctx) => d.listConsentimientos(ctx),
+  }),
 ];
 
 function match(pattern: string, segments: string[]): Record<string, string> | null {
@@ -266,6 +319,8 @@ export interface HandleOptions {
   getCtx: () => Promise<Ctx | null>;
   /** Peticiones por minuto y por tenant. */
   limitePorMinuto?: number;
+  /** Origen público del sitio; por defecto, el de la petición. */
+  origin?: string;
 }
 
 /** Atiende una petición a /api/v1/<segments>. */
@@ -317,7 +372,11 @@ export async function handleRequest(
       body = r.body.parse(parsed);
     }
 
-    return json(r.status ?? 200, await r.handler(ctx, { params, query, body }));
+    const meta: Meta = {
+      origen: d.origenDe(request.headers),
+      origin: options.origin ?? new URL(request.url).origin,
+    };
+    return json(r.status ?? 200, await r.handler(ctx, { params, query, body, meta }));
   } catch (error) {
     return errorResponse(error);
   }

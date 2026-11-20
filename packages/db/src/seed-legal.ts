@@ -63,7 +63,7 @@ export async function buildLegalSeed(): Promise<string> {
     "-- cambia el archivo de docs/legal y ejecuta `pnpm db:seed:legal`.",
     "-- Idempotente: una plantilla ya cargada se actualiza con el texto del archivo.",
     "insert into cumplimiento.plantilla (tipo, version, contenido_md, resumen_md) values",
-    `${filas.join(",\n")}`,
+    filas.join(",\n"),
     "on conflict (tipo, version) do update",
     "set contenido_md = excluded.contenido_md, resumen_md = excluded.resumen_md;",
     "",
