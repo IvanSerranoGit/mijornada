@@ -210,6 +210,7 @@ export function reporteHtml(
 <p class="mono">${e(verificacion.urlVerificacion)}</p>
 </div>
 </div>
+<p class="nota"><strong>Hash raíz del periodo:</strong> raíz Merkle de las huellas de todos los registros del reporte; cambia si se altera, quita o agrega uno solo. <strong>Huella del CSV de eventos:</strong> SHA-256 del archivo <span class="mono">eventos.csv</span> que acompaña a este reporte; se comprueba calculando el SHA-256 de ese archivo (por ejemplo con <span class="mono">shasum -a 256 eventos.csv</span>) y comparándolo con el de esta carátula y el de la página de verificación.</p>
 <p class="nota">Registro electrónico de jornada llevado conforme al artículo 132, fracción XXXIV, de la Ley Federal del Trabajo, con el sistema Mi Jornada. Las horas se muestran en la zona horaria de cada centro de trabajo.</p>`;
 
   const consentimientos = `<section class="salto">

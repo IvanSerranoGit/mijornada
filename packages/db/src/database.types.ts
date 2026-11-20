@@ -998,6 +998,9 @@ isOneToOne: false
 "cuenta_de_empleado":
 { Args: { "p_correo": string }; Returns: string
                            },
+"curp_de_trabajador":
+{ Args: { "p_trabajador_id": string }; Returns: string
+                           },
 "descifrar":
 { Args: { "p_dato": string,"p_tenant_id": string }; Returns: string
                            },
@@ -1038,7 +1041,7 @@ isOneToOne: false
                            },
 "estado_de_cuenta":
 { Args: { "p_tenant_id": string }; Returns: {
-              "acceso": string,"limite_personas": number,"motivo": string,"personas_activas": number,"plan": string,"plan_ciclo": string,"plan_hasta": string,"prueba_hasta": string,"tiene_suscripcion": boolean
+              "acceso": string,"gracia_hasta": string,"limite_personas": number,"motivo": string,"pago_fallido_en": string,"personas_activas": number,"plan": string,"plan_ciclo": string,"plan_hasta": string,"prueba_hasta": string,"tiene_suscripcion": boolean
             }[]
                            },
 "generar_codigo_enlace":

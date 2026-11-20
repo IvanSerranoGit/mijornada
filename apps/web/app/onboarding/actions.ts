@@ -59,14 +59,25 @@ export async function guardarEmpresa(_prev: FormState, formData: FormData): Prom
     sector: text(formData, "sector"),
     jurisdiccion: text(formData, "jurisdiccion"),
   };
+  // Opcionales: si faltan, los documentos dejan una línea en blanco y el panel lo avisa.
+  const legales = {
+    domicilio: text(formData, "domicilio") ?? null,
+    correo_privacidad: text(formData, "correo_privacidad") ?? null,
+  };
   try {
     if (ctx.sesion.tenantId === null) {
-      await createEmpresa(ctx, empresaCrear.parse(datos));
+      const legalesValidos = empresaActualizar.parse(legales);
+      const { id } = await createEmpresa(ctx, empresaCrear.parse(datos));
       // La sesión nueva trae los claims del tenant recién creado.
       const { error } = await ctx.db.auth.refreshSession();
       if (error) return { error: "La empresa se creó, pero hay que volver a iniciar sesión." };
+      await updateEmpresa(ctx, id, legalesValidos);
     } else {
-      await updateEmpresa(ctx, ctx.sesion.tenantId, empresaActualizar.parse(datos));
+      await updateEmpresa(
+        ctx,
+        ctx.sesion.tenantId,
+        empresaActualizar.parse({ ...datos, ...legales }),
+      );
     }
   } catch (error) {
     return { error: mensaje(error) };

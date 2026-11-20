@@ -125,17 +125,31 @@ export function varsCentro(centro: CentroLegal, origin: string): TemplateVars {
   };
 }
 
+/**
+ * CURP de una persona, descifrada en la base para quien tiene derecho a verla (un
+ * administrador del tenant o la propia persona). Null si no la tiene registrada.
+ */
+async function getCurp(ctx: Ctx, trabajadorId: string): Promise<string | null> {
+  const { data, error } = await ctx.db
+    .schema("tenants")
+    .rpc("curp_de_trabajador", { p_trabajador_id: trabajadorId });
+  if (error) throw fromDatabase(error);
+  // Los tipos generados no saben que la función devuelve null si no hay CURP.
+  const curp: string | null = data;
+  return curp;
+}
+
 /** Variables de la persona. Sin `aceptacion`, la fecha queda en blanco (ejemplar para firmar). */
 export function varsTrabajador(
-  trabajador: { nombre: string; puesto: string | null },
+  trabajador: { nombre: string; puesto: string | null; curp: string | null },
   documento: { contenido_hash: string },
   aceptadoEn: string | null,
   zona: string,
 ): TemplateVars {
   return {
     nombre_trabajador: trabajador.nombre,
-    // La CURP se guarda cifrada y es opcional: en el ejemplar impreso se llena a mano.
-    curp_trabajador: BLANCO,
+    // La CURP es opcional: si la persona no la tiene registrada, se llena a mano.
+    curp_trabajador: trabajador.curp ?? BLANCO,
     puesto: trabajador.puesto ?? BLANCO,
     hash_documento: documento.contenido_hash,
     fecha: aceptadoEn === null ? BLANCO : fechaLarga(new Date(aceptadoEn), zona),
@@ -346,7 +360,7 @@ export async function getMisDocumentos(
   const trabajadorId = ctx.sesion.trabajadorId;
   if (trabajadorId === null) throw new ApiError(403, "sin_permiso", "Solo para trabajadores.");
 
-  const [vigentes, estados, trabajador, empresa] = await Promise.all([
+  const [vigentes, estados, trabajador, empresa, curp] = await Promise.all([
     ctx.db.schema("cumplimiento").rpc("documentos_vigentes", { p_tenant_id: tenantId }),
     listConsentimientos(ctx),
     ctx.db
@@ -356,6 +370,7 @@ export async function getMisDocumentos(
       .eq("id", trabajadorId)
       .single(),
     getEmpresaLegal(ctx, tenantId),
+    getCurp(ctx, trabajadorId),
   ]);
   if (vigentes.error) throw fromDatabase(vigentes.error);
   if (trabajador.error) throw fromDatabase(trabajador.error);
@@ -377,7 +392,12 @@ export async function getMisDocumentos(
       );
       const vars = {
         ...varsCentro(centro, origin),
-        ...varsTrabajador(trabajador.data, d, estado?.aceptado_en ?? null, empresa.zona_horaria),
+        ...varsTrabajador(
+          { ...trabajador.data, curp },
+          d,
+          estado?.aceptado_en ?? null,
+          empresa.zona_horaria,
+        ),
       };
       return {
         id: d.id,
@@ -568,7 +588,12 @@ export async function getDocumentoImprimible(
     if (error) throw fromDatabase(error);
     if (trabajador === null) throw noEncontrado("El trabajador");
     centroId = trabajador.centro_id;
-    vars = varsTrabajador(trabajador, documento, null, empresa.zona_horaria);
+    vars = varsTrabajador(
+      { ...trabajador, curp: await getCurp(ctx, trabajadorId) },
+      documento,
+      null,
+      empresa.zona_horaria,
+    );
   }
 
   let centros = ctx.db

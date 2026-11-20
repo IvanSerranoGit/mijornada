@@ -108,6 +108,19 @@ export function PasoEmpresa({ empresa }: { empresa: Empresa | null }) {
         placeholder="XAXX010101000"
         nota="Puedes agregarlo después."
       />
+      <Campo
+        etiqueta="Domicilio del negocio (opcional)"
+        name="domicilio"
+        defaultValue={empresa?.domicilio ?? ""}
+        nota="Aparece en el convenio y en el aviso de privacidad de tu equipo."
+      />
+      <Campo
+        etiqueta="Correo para asuntos de privacidad (opcional)"
+        name="correo_privacidad"
+        type="email"
+        defaultValue={empresa?.correo_privacidad ?? ""}
+        nota="Ahí te escribirá tu equipo sobre sus datos personales. Puede ser tu correo."
+      />
       <Selector etiqueta="Tamaño" name="tamano" defaultValue={empresa?.tamano ?? "micro"}>
         <option value="micro">Micro (hasta 10 personas)</option>
         <option value="pequena">Pequeña (11 a 50)</option>

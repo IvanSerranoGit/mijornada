@@ -133,7 +133,7 @@ describe("transiciones de plan y bloqueo suave", () => {
     expect((await estado()).plan).toBe("prueba");
   });
 
-  it("checkout → suscripción activa → pago fallido → regularización → cancelación", async () => {
+  it("checkout → activa → pago fallido con gracia → solo lectura → regularización → cancelación", async () => {
     // 1. Termina el checkout: la empresa queda ligada al cliente y a la suscripción.
     const checkout = evento("checkout.session.completed", {
       mode: "subscription",
@@ -167,6 +167,21 @@ describe("transiciones de plan y bloqueo suave", () => {
 
     // 3. Falla el cobro (el evento llega sin metadatos: se ubica por el cliente).
     await aplicarEventoStripe(admin, evento("invoice.payment_failed", { customer: cliente }));
+    // Hay 7 días de gracia (calculo.regla dias_gracia_pago): todo sigue disponible, con aviso.
+    const enGracia = await estado();
+    expect(enGracia).toMatchObject({ plan: "basico", acceso: "completo", motivo: null });
+    const gracia =
+      new Date(enGracia.gracia_hasta ?? 0).getTime() -
+      new Date(enGracia.pago_fallido_en ?? 0).getTime();
+    expect(gracia).toBe(7 * 86_400_000);
+    await expect(requireCuentaActiva(await empresa.dueno.ctx())).resolves.toBeUndefined();
+
+    // Pasan los 7 días sin pago: solo lectura.
+    await admin
+      .schema("tenants")
+      .from("empresa")
+      .update({ pago_fallido_en: new Date(Date.now() - 7 * 86_400_000 - 60_000).toISOString() })
+      .eq("id", empresa.tenantId);
     expect(await estado()).toMatchObject({
       plan: "basico",
       acceso: "solo_lectura",

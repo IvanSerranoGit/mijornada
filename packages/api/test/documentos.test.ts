@@ -217,6 +217,30 @@ describe("documentos de la empresa", () => {
     expect(enBlanco.contenido_html).not.toMatch(/\{\{|Mariana/);
     expect(personal.contenido_html).toContain("Mariana López");
     expect(personal.contenido_html).toContain(convenio.contenido_hash);
+
+    // Con CURP registrada, el convenio de esa persona la lleva; el ejemplar en blanco, no.
+    const conCurp = await empresa.dueno.api<{ id: string }>("POST", "/trabajadores", {
+      centro_id: empresa.centroId,
+      nombre: "Rosa Díaz",
+      curp: "DIAR900101MDFZSS09",
+    });
+    expect(conCurp.status).toBe(201);
+    const suyo = await getDocumentoImprimible(
+      ctx,
+      convenio.id,
+      "https://mijornada.test",
+      conCurp.body.id,
+    );
+    expect(suyo.contenido_html).toContain("con CURP DIAR900101MDFZSS09");
+    expect(personal.contenido_html).toMatch(/con CURP _{8,}/);
+    expect(enBlanco.contenido_html).not.toContain("DIAR900101MDFZSS09");
+    // Otra persona no puede pedir esa CURP.
+    const { error } = await (
+      await empleado.ctx()
+    ).db
+      .schema("tenants")
+      .rpc("curp_de_trabajador", { p_trabajador_id: conCurp.body.id });
+    expect(error?.code).toBe("42501");
   });
 
   it("una versión nueva (texto del abogado) deja pendientes los consentimientos; solo publica un administrador", async () => {

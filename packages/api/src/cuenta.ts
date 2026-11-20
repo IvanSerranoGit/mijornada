@@ -13,6 +13,10 @@ export interface EstadoCuenta {
   acceso: "completo" | "solo_lectura";
   motivo: "prueba_vencida" | "pago_fallido" | null;
   tiene_suscripcion: boolean;
+  /** Cobro fallido sin regularizar; nulo si está al corriente. */
+  pago_fallido_en: string | null;
+  /** Hasta cuándo dura la gracia antes de pasar a solo lectura. */
+  gracia_hasta: string | null;
 }
 
 function tenantDe(ctx: Ctx): string {

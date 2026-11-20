@@ -64,11 +64,13 @@ export default async function PlanPage({
         <p className="text-pequeno">
           {estado.motivo === "pago_fallido"
             ? "No pudimos cobrar tu plan. Actualiza tu forma de pago para volver a administrar."
-            : estado.motivo === "prueba_vencida"
-              ? "Tu prueba terminó. Elige un plan para volver a dar de alta personas y cambiar la configuración."
-              : pagado
-                ? `Pago ${estado.plan_ciclo === "anual" ? "anual" : "mensual"}${estado.plan_hasta ? ` · periodo pagado hasta el ${fechaCorta(estado.plan_hasta)}` : ""}.`
-                : `Te ${dias === 1 ? "queda 1 día" : `quedan ${String(dias)} días`} de prueba, sin tarjeta.`}
+            : estado.pago_fallido_en !== null && estado.gracia_hasta !== null
+              ? `No pudimos cobrar tu plan. Tienes hasta el ${fechaCorta(estado.gracia_hasta)} para actualizar tu forma de pago; después el panel queda en solo lectura.`
+              : estado.motivo === "prueba_vencida"
+                ? "Tu prueba terminó. Elige un plan para volver a dar de alta personas y cambiar la configuración."
+                : pagado
+                  ? `Pago ${estado.plan_ciclo === "anual" ? "anual" : "mensual"}${estado.plan_hasta ? ` · periodo pagado hasta el ${fechaCorta(estado.plan_hasta)}` : ""}.`
+                  : `Te ${dias === 1 ? "queda 1 día" : `quedan ${String(dias)} días`} de prueba, sin tarjeta.`}
         </p>
         <p className="text-pequeno text-text-secondary">
           {estado.personas_activas} de {estado.limite_personas} personas incluidas.
