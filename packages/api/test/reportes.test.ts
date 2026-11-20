@@ -198,7 +198,12 @@ describe("acceso de inspector", () => {
       "GET",
       `/reportes/${reporte.id}/consultas`,
     );
-    expect(consultas.body.map((consulta) => [consulta.accion, consulta.ip]).sort()).toEqual([
+    // La verificación registra la IP que ve la base: la del servidor de la aplicación.
+    const rastro = consultas.body.map((c) => [
+      c.accion,
+      c.accion === "acceso_inspector" ? null : c.ip,
+    ]);
+    expect(rastro.sort()).toEqual([
       ["acceso_inspector", null],
       ["inspector_abre_reporte", "189.203.1.9"],
       ["inspector_descarga_pdf", "189.203.1.9"],
