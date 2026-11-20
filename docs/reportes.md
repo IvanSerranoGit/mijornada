@@ -7,20 +7,20 @@ respaldan y cómo lo consulta un inspector.
 
 `POST /api/v1/reportes` (panel → Reportes). Solo dueño o administrador.
 
-| Campo | Valor |
-| --- | --- |
-| `tipo` | `inspeccion`, `periodo` o `trabajador` (este último, una sola persona) |
-| `desde`, `hasta` | Fechas del periodo (máximo un año), en la zona horaria de la empresa |
-| `centro_id` | Opcional: limita el reporte a un centro |
-| `trabajador_ids` | Opcional: limita el reporte a ciertas personas |
+| Campo            | Valor                                                                  |
+| ---------------- | ---------------------------------------------------------------------- |
+| `tipo`           | `inspeccion`, `periodo` o `trabajador` (este último, una sola persona) |
+| `desde`, `hasta` | Fechas del periodo (máximo un año), en la zona horaria de la empresa   |
+| `centro_id`      | Opcional: limita el reporte a un centro                                |
+| `trabajador_ids` | Opcional: limita el reporte a ciertas personas                         |
 
 Se generan tres archivos en el bucket privado `reportes`, en `<tenant>/<reporte>/`:
 
-| Archivo | Contenido |
-| --- | --- |
-| `reporte.pdf` | El reporte, con Playwright (`apps/web/lib/pdf.ts`) |
+| Archivo       | Contenido                                                                                   |
+| ------------- | ------------------------------------------------------------------------------------------- |
+| `reporte.pdf` | El reporte, con Playwright (`apps/web/lib/pdf.ts`)                                          |
 | `eventos.csv` | Eventos crudos del periodo: todas las columnas de `jornada.evento` menos la ruta de la foto |
-| `dias.csv` | `jornada.dia_laboral` del periodo |
+| `dias.csv`    | `jornada.dia_laboral` del periodo                                                           |
 
 Los CSV van en UTF-8 con BOM y saltos `\r\n` (RFC 4180) para abrirse bien en hojas de
 cálculo. La fila queda en `cumplimiento.reporte` (`cumplimiento.registrar_reporte`).
@@ -47,10 +47,10 @@ Las horas se muestran en la zona horaria de cada centro.
 
 ## Huellas
 
-| Huella | Qué es | Dónde aparece |
-| --- | --- | --- |
-| `hash_contenido` | SHA-256 de `eventos.csv`, byte por byte | Carátula, pie de cada página, página de verificación |
-| `hash_raiz` | Raíz Merkle de los hashes de los eventos del reporte, en orden de `(ts_servidor, id)` (misma construcción que el sello diario) | Carátula, página de verificación |
+| Huella           | Qué es                                                                                                                         | Dónde aparece                                        |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| `hash_contenido` | SHA-256 de `eventos.csv`, byte por byte                                                                                        | Carátula, pie de cada página, página de verificación |
+| `hash_raiz`      | Raíz Merkle de los hashes de los eventos del reporte, en orden de `(ts_servidor, id)` (misma construcción que el sello diario) | Carátula, página de verificación                     |
 
 Quien reciba el CSV puede calcular su SHA-256 y compararlo con el del PDF.
 
@@ -82,15 +82,15 @@ revocable). El enlace se muestra una sola vez.
 
 ## API
 
-| Ruta | Qué hace |
-| --- | --- |
-| `GET /api/v1/reportes` | Reportes generados |
-| `POST /api/v1/reportes` | Genera un reporte; devuelve también `url_verificacion` |
-| `GET /api/v1/reportes/{id}/verificacion` | Verifica las cadenas del reporte |
-| `GET /api/v1/reportes/{id}/accesos` | Accesos de inspector |
-| `POST /api/v1/reportes/{id}/accesos` | Crea un enlace de inspector |
-| `GET /api/v1/reportes/{id}/consultas` | Rastro del inspector |
-| `POST /api/v1/accesos-inspector/{id}/revocacion` | Revoca un acceso |
+| Ruta                                             | Qué hace                                               |
+| ------------------------------------------------ | ------------------------------------------------------ |
+| `GET /api/v1/reportes`                           | Reportes generados                                     |
+| `POST /api/v1/reportes`                          | Genera un reporte; devuelve también `url_verificacion` |
+| `GET /api/v1/reportes/{id}/verificacion`         | Verifica las cadenas del reporte                       |
+| `GET /api/v1/reportes/{id}/accesos`              | Accesos de inspector                                   |
+| `POST /api/v1/reportes/{id}/accesos`             | Crea un enlace de inspector                            |
+| `GET /api/v1/reportes/{id}/consultas`            | Rastro del inspector                                   |
+| `POST /api/v1/accesos-inspector/{id}/revocacion` | Revoca un acceso                                       |
 
 Los archivos se descargan en `/reportes/{id}/{pdf|eventos|dias}` (fuera de `/api/v1` porque
 no son JSON), con los permisos de quien llama.

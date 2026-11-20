@@ -5,12 +5,12 @@
 Precios en pesos, **con IVA incluido** (es lo que ve el cliente; la factura de Stripe
 desglosa el IVA). El anual cuesta diez meses.
 
-| Plan | Personas incluidas | Mensual | Anual |
-| --- | --- | --- | --- |
-| Prueba | 60 | Gratis 14 días, sin tarjeta | — |
-| Básico | 10 | $299 | $2,990 |
-| Negocio | 30 | $599 | $5,990 |
-| Crecimiento | 60, después $20 por persona adicional al mes | $999 | $9,990 |
+| Plan        | Personas incluidas                           | Mensual                     | Anual  |
+| ----------- | -------------------------------------------- | --------------------------- | ------ |
+| Prueba      | 60                                           | Gratis 14 días, sin tarjeta | —      |
+| Básico      | 10                                           | $299                        | $2,990 |
+| Negocio     | 30                                           | $599                        | $5,990 |
+| Crecimiento | 60, después $20 por persona adicional al mes | $999                        | $9,990 |
 
 El catálogo vive en `packages/api/src/pagos.ts` (`PLANES`) y el límite por plan también en
 la base (`tenants.limite_de_plan`). Los precios se buscan en Stripe por su `lookup_key`
@@ -22,12 +22,12 @@ mismo código sirve en modo de prueba y en modo real.
 `tenants.estado_de_cuenta(tenant)` (API: `GET /api/v1/cuenta`) devuelve el plan, el límite,
 las personas activas y el **acceso**:
 
-| Situación | Acceso | Motivo |
-| --- | --- | --- |
-| Prueba vigente o plan al corriente | `completo` | — |
-| Prueba vencida sin plan | `solo_lectura` | `prueba_vencida` |
-| Cobro fallido | `solo_lectura` | `pago_fallido` |
-| Suscripción cancelada | `solo_lectura` | `prueba_vencida` (vuelve a "prueba" ya consumida) |
+| Situación                          | Acceso         | Motivo                                            |
+| ---------------------------------- | -------------- | ------------------------------------------------- |
+| Prueba vigente o plan al corriente | `completo`     | —                                                 |
+| Prueba vencida sin plan            | `solo_lectura` | `prueba_vencida`                                  |
+| Cobro fallido                      | `solo_lectura` | `pago_fallido`                                    |
+| Suscripción cancelada              | `solo_lectura` | `prueba_vencida` (vuelve a "prueba" ya consumida) |
 
 En **solo lectura** la API responde `402 solo_lectura` a la administración: altas y cambios
 de personas, centros, horarios, documentos, kioscos, invitaciones y usuarios
@@ -58,12 +58,12 @@ por la API: se revocó ese permiso.
 2. **Webhook** (`POST /api/stripe/webhook`): comprueba la firma con el cuerpo tal como
    llegó y aplica el cambio. Es idempotente (`tenants.evento_stripe`).
 
-   | Evento | Efecto |
-   | --- | --- |
-   | `checkout.session.completed` | Liga la empresa con el cliente y la suscripción |
+   | Evento                                      | Efecto                                                                                              |
+   | ------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+   | `checkout.session.completed`                | Liga la empresa con el cliente y la suscripción                                                     |
    | `customer.subscription.created` / `updated` | Plan, ciclo y fin de periodo; al corriente limpia el aviso de pago, `past_due`/`unpaid` lo enciende |
-   | `customer.subscription.deleted` | Vuelve a "prueba" consumida: solo lectura |
-   | `invoice.payment_failed` | Enciende el aviso de pago fallido |
+   | `customer.subscription.deleted`             | Vuelve a "prueba" consumida: solo lectura                                                           |
+   | `invoice.payment_failed`                    | Enciende el aviso de pago fallido                                                                   |
 
 3. **Portal** (`POST /api/v1/cuenta/portal`): portal de facturación de Stripe para cambiar
    de plan o de tarjeta, o cancelar.
@@ -78,10 +78,10 @@ solicita a `facturacion@mijornada.xyz`; Inzotec la emite a mano.
 
 ## Configuración
 
-| Variable (solo servidor) | Para qué |
-| --- | --- |
-| `STRIPE_SECRET_KEY` | Llave secreta: `sk_test_…` en local y preview, `sk_live_…` en producción |
-| `STRIPE_WEBHOOK_SECRET` | Secreto de firma del webhook (`whsec_…`) |
+| Variable (solo servidor) | Para qué                                                                 |
+| ------------------------ | ------------------------------------------------------------------------ |
+| `STRIPE_SECRET_KEY`      | Llave secreta: `sk_test_…` en local y preview, `sk_live_…` en producción |
+| `STRIPE_WEBHOOK_SECRET`  | Secreto de firma del webhook (`whsec_…`)                                 |
 
 Sin `STRIPE_SECRET_KEY`, las rutas de cobro responden `503 pagos_no_disponibles` y el
 resto del producto funciona igual.

@@ -6,11 +6,11 @@ quién autorizó y cuándo se conservan siempre.
 
 ## Tipos
 
-| Tipo | Qué pide | Evento que inserta al aprobarse |
-| --- | --- | --- |
-| `olvido` | Registrar una marca que faltó, con su hora | El marcaje (`entrada`, `salida`…) con `origen = 'incidencia'` y `ts_declarado` |
-| `correccion_hora` | Cambiar la hora de una marca existente | `correccion` que apunta a la marca original, con `ts_declarado` |
-| `permiso`, `home_office`, `falta_justificada` | Dejar constancia | `aprobacion` |
+| Tipo                                          | Qué pide                                   | Evento que inserta al aprobarse                                                |
+| --------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------ |
+| `olvido`                                      | Registrar una marca que faltó, con su hora | El marcaje (`entrada`, `salida`…) con `origen = 'incidencia'` y `ts_declarado` |
+| `correccion_hora`                             | Cambiar la hora de una marca existente     | `correccion` que apunta a la marca original, con `ts_declarado`                |
+| `permiso`, `home_office`, `falta_justificada` | Dejar constancia                           | `aprobacion`                                                                   |
 
 El día laboral (`jornada.dia_laboral`) usa la hora declarada y queda en estado
 `corregido`. Los eventos nuevos se encadenan con el hash vigente (versión 3).
@@ -52,13 +52,13 @@ a lado, y el reporte para inspección. Solo la puede llamar quien puede ver a es
 
 ## API
 
-| Ruta | Qué hace |
-| --- | --- |
-| `GET /api/v1/incidencias` | Lista con filtros `estado`, `centro_id`, `trabajador_id` |
-| `POST /api/v1/incidencias` | Abre una incidencia |
-| `POST /api/v1/incidencias/{id}/resolucion` | Aprueba o rechaza |
-| `POST /api/v1/incidencias/{id}/respuesta` | Conformidad o inconformidad del trabajador |
-| `GET /api/v1/marcajes` | Detalle de marcajes de una persona entre dos fechas |
+| Ruta                                       | Qué hace                                                 |
+| ------------------------------------------ | -------------------------------------------------------- |
+| `GET /api/v1/incidencias`                  | Lista con filtros `estado`, `centro_id`, `trabajador_id` |
+| `POST /api/v1/incidencias`                 | Abre una incidencia                                      |
+| `POST /api/v1/incidencias/{id}/resolucion` | Aprueba o rechaza                                        |
+| `POST /api/v1/incidencias/{id}/respuesta`  | Conformidad o inconformidad del trabajador               |
+| `GET /api/v1/marcajes`                     | Detalle de marcajes de una persona entre dos fechas      |
 
 ## Pruebas
 

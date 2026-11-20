@@ -6,11 +6,11 @@ revisión de abogado**; el sistema los trata como versiones reemplazables.
 
 ## Plantillas
 
-| Archivo en `docs/legal/` | Tipo | Uso |
-| --- | --- | --- |
-| `convenio-registro-jornada-v0.9.md` | `convenio_registro` | Acuerdo patrón–trabajador sobre el registro (art. 132 fr. XXXIV LFT). |
-| `aviso-privacidad-integral-v0.9.md` | `aviso_privacidad` | Aviso integral del patrón hacia sus trabajadores. |
-| `aviso-privacidad-simplificado-v0.9.md` | resumen del aviso | Lo que se muestra antes de marcar, con enlace al integral. |
+| Archivo en `docs/legal/`                | Tipo                | Uso                                                                   |
+| --------------------------------------- | ------------------- | --------------------------------------------------------------------- |
+| `convenio-registro-jornada-v0.9.md`     | `convenio_registro` | Acuerdo patrón–trabajador sobre el registro (art. 132 fr. XXXIV LFT). |
+| `aviso-privacidad-integral-v0.9.md`     | `aviso_privacidad`  | Aviso integral del patrón hacia sus trabajadores.                     |
+| `aviso-privacidad-simplificado-v0.9.md` | resumen del aviso   | Lo que se muestra antes de marcar, con enlace al integral.            |
 
 - Los archivos se cargan en `cumplimiento.plantilla` con el seed
   `supabase/seeds/0002_plantillas_legales.sql`, que **se genera** con `pnpm db:seed:legal`
@@ -64,11 +64,11 @@ versión y la huella. Se genera al pedirlo; no se guarda.
 Solo cuenta la aceptación de la **versión vigente**. Métodos, todos en
 `cumplimiento.consentimiento` (pueden convivir para el mismo documento):
 
-| Método | Dónde | Qué cubre | Evidencia |
-| --- | --- | --- | --- |
-| `firma_simple` | PWA, `/app/documentos` | Aviso y convenio | Nombre completo tecleado (debe coincidir con el registrado salvo acentos, mayúsculas y espacios), hora del servidor, IP, navegador, `evidencia_hash`. |
-| `clic` | Kiosco, "Acepto y marco" con PIN o QR | Solo el aviso de privacidad, que es lo que se muestra | Hora del servidor, IP, navegador, `evidencia_hash`. |
-| `firma_autografa` | Panel → Documentos, el patrón sube el ejemplar firmado | El documento firmado | Archivo en el bucket `documentos` y su SHA-256 (`archivo_hash`). |
+| Método            | Dónde                                                  | Qué cubre                                             | Evidencia                                                                                                                                             |
+| ----------------- | ------------------------------------------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `firma_simple`    | PWA, `/app/documentos`                                 | Aviso y convenio                                      | Nombre completo tecleado (debe coincidir con el registrado salvo acentos, mayúsculas y espacios), hora del servidor, IP, navegador, `evidencia_hash`. |
+| `clic`            | Kiosco, "Acepto y marco" con PIN o QR                  | Solo el aviso de privacidad, que es lo que se muestra | Hora del servidor, IP, navegador, `evidencia_hash`.                                                                                                   |
+| `firma_autografa` | Panel → Documentos, el patrón sube el ejemplar firmado | El documento firmado                                  | Archivo en el bucket `documentos` y su SHA-256 (`archivo_hash`).                                                                                      |
 
 - `evidencia_hash = SHA-256(documento_hash | trabajador_id | nombre_tecleado | aceptado_en | ip)`,
   unidos con `|` en UTF-8; `aceptado_en` en UTC con microsegundos; nombre e IP vacíos si no
