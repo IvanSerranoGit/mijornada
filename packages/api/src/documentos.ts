@@ -464,6 +464,53 @@ export async function registerFirmaAutografa(
   return data;
 }
 
+const TIPOS_DE_LOGO: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+};
+
+/** Guarda el logo de la empresa (bucket documentos); aparece en los PDF. */
+export async function uploadLogo(ctx: Ctx, input: { archivo: Uint8Array; tipo_mime: string }) {
+  const tenantId = requireTenant(ctx);
+  const extension = TIPOS_DE_LOGO[input.tipo_mime];
+  if (extension === undefined) throw invalido("El logo debe ser una imagen PNG, JPG o WebP.");
+  if (input.archivo.byteLength === 0 || input.archivo.byteLength > 1024 * 1024) {
+    throw invalido("El logo debe pesar menos de 1 MB.");
+  }
+  // El nombre lleva la huella del archivo: cambiar de logo no sobrescribe el anterior.
+  const huella = bytesToHex(await sha256(input.archivo)).slice(0, 12);
+  const ruta = `${tenantId}/logo-${huella}.${extension}`;
+  const { error: subida } = await ctx.db.storage
+    .from("documentos")
+    .upload(ruta, input.archivo, { contentType: input.tipo_mime, upsert: false });
+  if (subida && !/exist/i.test(subida.message)) {
+    throw new ApiError(502, "almacenamiento", "No se pudo guardar el logo. Intenta de nuevo.");
+  }
+  const { error } = await ctx.db
+    .schema("tenants")
+    .from("empresa")
+    .update({ logo_url: ruta })
+    .eq("id", tenantId);
+  if (error) throw fromDatabase(error);
+  return { logo_url: ruta };
+}
+
+/** Logo de la empresa como data URL para incrustarlo en un PDF; null si no cargó uno. */
+export async function getLogoDataUrl(ctx: Ctx, tenantId: string): Promise<string | null> {
+  const { data: empresa } = await ctx.db
+    .schema("tenants")
+    .from("empresa")
+    .select("logo_url")
+    .eq("id", tenantId)
+    .maybeSingle();
+  if (!empresa?.logo_url) return null;
+  const { data: archivo } = await ctx.db.storage.from("documentos").download(empresa.logo_url);
+  if (!archivo) return null;
+  const base64 = Buffer.from(await archivo.arrayBuffer()).toString("base64");
+  return `data:${archivo.type};base64,${base64}`;
+}
+
 /** Aviso de privacidad integral vigente de un centro, para la página pública. */
 export async function getAvisoPublico(publico: Db, centroId: string, origin: string) {
   const { data, error } = await publico
@@ -482,6 +529,7 @@ export async function getAvisoPublico(publico: Db, centroId: string, origin: str
 }
 
 export interface DocumentoImprimible {
+  tenant_id: string;
   titulo: string;
   razon_social: string;
   version: number;
@@ -539,6 +587,7 @@ export async function getDocumentoImprimible(
     ...vars,
   });
   return {
+    tenant_id: documento.tenant_id,
     titulo: TITULO_DOCUMENTO[documento.tipo as TipoDocumento],
     razon_social: empresa.razon_social,
     version: documento.version,

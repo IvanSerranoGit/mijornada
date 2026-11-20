@@ -16,6 +16,7 @@ import {
   type ResultadoEnvio,
 } from "@mijornada/offline";
 import { Boton, Chip, Logo, Tarjeta } from "@mijornada/ui";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { salir } from "../(cuenta)/actions.ts";
@@ -28,6 +29,8 @@ interface Props {
   nombre: string;
   zona: string;
   fotoRequerida: boolean;
+  /** Tiene documentos (aviso, convenio) sin aceptar. */
+  documentosPendientes: boolean;
   hoy: string;
   ultimaMarca: SemanaTrabajador["ultimaMarca"];
   dias: SemanaTrabajador["dias"];
@@ -296,6 +299,19 @@ export function Marcador(props: Props) {
           {formatoHora(new Date(ultima.hora), props.zona)}.
         </p>
       ) : null}
+
+      {props.documentosPendientes ? (
+        <Link
+          href="/app/documentos"
+          className="rounded-(--radio-md) bg-status-warning-soft p-(--espacio-md) text-pequeno text-status-warning-text"
+        >
+          Tienes documentos por aceptar. Tócalos aquí para leerlos.
+        </Link>
+      ) : (
+        <Link href="/app/documentos" className="text-pequeno text-text-secondary underline">
+          Mis documentos
+        </Link>
+      )}
 
       {rechazados.map((marca) => (
         <div

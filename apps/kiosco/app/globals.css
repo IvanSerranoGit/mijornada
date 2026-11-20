@@ -1,3 +1,18 @@
 @import "tailwindcss";
 @import "@mijornada/ui/theme.css";
 @source "../../../packages/ui/src";
+
+/* Aviso de privacidad simplificado: sale de markdownToHtml, que ya escapa el HTML. */
+.documento {
+  line-height: 1.6;
+}
+.documento p {
+  margin-bottom: 0.75rem;
+}
+.documento p:last-child {
+  margin-bottom: 0;
+}
+.documento a {
+  text-decoration: underline;
+  word-break: break-word;
+}

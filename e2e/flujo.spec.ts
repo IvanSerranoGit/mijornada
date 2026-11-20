@@ -1,6 +1,7 @@
 // Flujo completo del sprint 2: el dueño da de alta su negocio, una trabajadora
 // marca desde su celular (con la red cortada) y después marca en el kiosco.
 import { expect, test, type Page } from "@playwright/test";
+import { aceptarDocumentos } from "./consentimiento.ts";
 
 const WEB = "http://localhost:3000";
 const KIOSCO = "http://localhost:3001";
@@ -85,6 +86,7 @@ async function activarAcceso(page: Page) {
   await page.getByLabel("Tu correo").fill(`mariana-${unique}@prueba.test`);
   await page.getByLabel("Tu PIN de 4 dígitos").fill(datos.pin);
   await page.getByRole("button", { name: "Activar mi acceso" }).click();
+  await aceptarDocumentos(page, "mariana lopez");
   await expect(page.getByRole("heading", { name: "Hola, Mariana" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Registrar entrada" })).toBeVisible();
 }

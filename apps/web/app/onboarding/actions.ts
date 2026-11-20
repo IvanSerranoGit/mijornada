@@ -14,6 +14,7 @@ import {
   updateCentro,
   updateEmpresa,
   type Ctx,
+  ensureDocumentos,
 } from "@mijornada/api";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -237,6 +238,8 @@ export async function terminarOnboarding(): Promise<void> {
     await updateEmpresa(ctx, ctx.sesion.tenantId, {
       onboarding_completado_en: new Date().toISOString(),
     });
+    // La empresa nace con su convenio y su aviso de privacidad (versión 1 de las plantillas).
+    await ensureDocumentos(ctx);
   }
   redirect("/panel");
 }

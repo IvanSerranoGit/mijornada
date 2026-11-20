@@ -1,8 +1,7 @@
 import { getPanelSemanal, listEmpresas, type SemanaTrabajador } from "@mijornada/api";
-import { Boton, Chip, Logo, Tarjeta, cx } from "@mijornada/ui";
+import { Chip, Tarjeta, cx } from "@mijornada/ui";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { salir } from "../(cuenta)/actions.ts";
 import { getCtx } from "../../lib/supabase/server.ts";
 import { Invitar } from "./Invitar.tsx";
 import { AccionesKiosco } from "./AccionesKiosco.tsx";
@@ -126,16 +125,7 @@ export default async function PanelPage() {
   );
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-(--espacio-lg) p-(--espacio-lg)">
-      <header className="flex items-center justify-between">
-        <Logo tamano={32} />
-        <form action={salir}>
-          <Boton type="submit" estilo="fantasma">
-            Salir
-          </Boton>
-        </form>
-      </header>
-
+    <>
       <section className="flex flex-col gap-(--espacio-2xs)">
         <p className="text-etiqueta font-medium text-text-secondary uppercase">{fecha}</p>
         <h1 className="font-titulo text-titulo-1 font-bold">
@@ -182,6 +172,6 @@ export default async function PanelPage() {
           </Tarjeta>
         );
       })}
-    </main>
+    </>
   );
 }

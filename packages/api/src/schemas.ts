@@ -45,6 +45,10 @@ export const empresaActualizar = z
     jurisdiccion: z.enum(JURISDICCIONES),
     zona_horaria: texto(64),
     onboarding_completado_en: instante.nullable(),
+    // Datos que piden el convenio y el aviso de privacidad.
+    domicilio: z.string().trim().min(5).max(300).nullable(),
+    correo_privacidad: z.email("Escribe un correo válido.").max(200).nullable(),
+    telefono_privacidad: z.string().trim().min(7).max(30).nullable(),
   })
   .partial();
 
