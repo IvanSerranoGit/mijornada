@@ -1,6 +1,7 @@
 import { getPanelSemanal, listEmpresas, type SemanaTrabajador } from "@mijornada/api";
 import { Chip, Tarjeta, cx } from "@mijornada/ui";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCtx } from "../../lib/supabase/server.ts";
 import { Invitar } from "./Invitar.tsx";
@@ -63,7 +64,9 @@ function FilaSemana({
       <div className="flex items-end gap-(--espacio-xs)">
         {semana.dias.map((dia, index) => (
           <div key={dia.fecha} className="flex flex-1 flex-col items-center gap-(--espacio-2xs)">
-            <span
+            <Link
+              href={`/panel/dia?trabajador=${semana.trabajador.id}&fecha=${dia.fecha}`}
+              aria-label={`Ver el día ${dia.fecha} de ${semana.trabajador.nombre}`}
               title={
                 dia.estado === "incompleto"
                   ? "Falta una marca"
@@ -72,7 +75,7 @@ function FilaSemana({
                     : undefined
               }
               className={cx(
-                "w-full rounded-(--radio-sm) py-(--espacio-2xs) text-center text-nota",
+                "block w-full rounded-(--radio-sm) py-(--espacio-2xs) text-center text-nota",
                 dia.fecha === hoy && "ring-1 ring-border-brand",
                 dia.estado === "incompleto"
                   ? "bg-status-warning-soft text-status-warning-text"
@@ -86,7 +89,7 @@ function FilaSemana({
                 : dia.minutosTrabajados > 0
                   ? (dia.minutosTrabajados / 60).toFixed(1)
                   : "–"}
-            </span>
+            </Link>
             <span className="text-nota text-text-secondary">{DIAS_CORTOS[index]}</span>
           </div>
         ))}

@@ -39,7 +39,10 @@ export type Database = {
             [_ in never]: never
           }
           Functions: {
-            "regla_vigente":
+            "dias_habiles_entre":
+{ Args: { "p_desde": string,"p_hasta": string }; Returns: number
+                           },
+"regla_vigente":
 { Args: { "p_clave": string,"p_fecha": string }; Returns: number
                            }
           }
@@ -107,14 +110,14 @@ isOneToOne: false
                   ]
                 },"incidencia": {
                   Row: {
-                    "aceptada_en": string | null,"aceptada_por": string | null,"creado_en": string,"estado": string,"evento_referido_id": string | null,"evento_resultante_id": string | null,"fecha": string,"id": string,"motivo": string,"resuelto_en": string | null,"resuelto_por": string | null,"solicitado_por": string,"tenant_id": string,"tipo": string,"tipo_marcaje": string | null,"trabajador_id": string,"ts_declarado": string | null
+                    "aceptada_en": string | null,"aceptada_por": string | null,"comentario_trabajador": string | null,"creado_en": string,"estado": string,"evento_referido_id": string | null,"evento_resultante_id": string | null,"extemporanea": boolean,"fecha": string,"id": string,"inconforme_en": string | null,"motivo": string,"resuelto_en": string | null,"resuelto_por": string | null,"solicitado_por": string,"tenant_id": string,"tipo": string,"tipo_marcaje": string | null,"trabajador_id": string,"ts_declarado": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "aceptada_en"?: string | null,"aceptada_por"?: string | null,"creado_en"?: string,"estado"?: string,"evento_referido_id"?: string | null,"evento_resultante_id"?: string | null,"fecha": string,"id"?: string,"motivo": string,"resuelto_en"?: string | null,"resuelto_por"?: string | null,"solicitado_por": string,"tenant_id": string,"tipo": string,"tipo_marcaje"?: string | null,"trabajador_id": string,"ts_declarado"?: string | null
+                    "aceptada_en"?: string | null,"aceptada_por"?: string | null,"comentario_trabajador"?: string | null,"creado_en"?: string,"estado"?: string,"evento_referido_id"?: string | null,"evento_resultante_id"?: string | null,"extemporanea"?: boolean,"fecha": string,"id"?: string,"inconforme_en"?: string | null,"motivo": string,"resuelto_en"?: string | null,"resuelto_por"?: string | null,"solicitado_por": string,"tenant_id": string,"tipo": string,"tipo_marcaje"?: string | null,"trabajador_id": string,"ts_declarado"?: string | null
                   }
                   Update: {
-                    "aceptada_en"?: string | null,"aceptada_por"?: string | null,"creado_en"?: string,"estado"?: string,"evento_referido_id"?: string | null,"evento_resultante_id"?: string | null,"fecha"?: string,"id"?: string,"motivo"?: string,"resuelto_en"?: string | null,"resuelto_por"?: string | null,"solicitado_por"?: string,"tenant_id"?: string,"tipo"?: string,"tipo_marcaje"?: string | null,"trabajador_id"?: string,"ts_declarado"?: string | null
+                    "aceptada_en"?: string | null,"aceptada_por"?: string | null,"comentario_trabajador"?: string | null,"creado_en"?: string,"estado"?: string,"evento_referido_id"?: string | null,"evento_resultante_id"?: string | null,"extemporanea"?: boolean,"fecha"?: string,"id"?: string,"inconforme_en"?: string | null,"motivo"?: string,"resuelto_en"?: string | null,"resuelto_por"?: string | null,"solicitado_por"?: string,"tenant_id"?: string,"tipo"?: string,"tipo_marcaje"?: string | null,"trabajador_id"?: string,"ts_declarado"?: string | null
                   }
                   Relationships: [
                     
@@ -153,7 +156,36 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "aceptar_documento":
+            "abrir_incidencia":
+{ Args: { "p_evento_referido_id"?: string,"p_fecha": string,"p_hora"?: string,"p_motivo": string,"p_tipo": string,"p_tipo_marcaje"?: string,"p_trabajador_id": string }; Returns: {
+              "aceptada_en": string | null,
+"aceptada_por": string | null,
+"comentario_trabajador": string | null,
+"creado_en": string,
+"estado": string,
+"evento_referido_id": string | null,
+"evento_resultante_id": string | null,
+"extemporanea": boolean,
+"fecha": string,
+"id": string,
+"inconforme_en": string | null,
+"motivo": string,
+"resuelto_en": string | null,
+"resuelto_por": string | null,
+"solicitado_por": string,
+"tenant_id": string,
+"tipo": string,
+"tipo_marcaje": string | null,
+"trabajador_id": string,
+"ts_declarado": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "incidencia"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"aceptar_documento":
 { Args: { "p_documento_id": string,"p_ip"?: unknown,"p_nombre": string,"p_user_agent"?: string }; Returns: {
               "aceptado_en": string,"consentimiento_id": string,"evidencia_hash": string
             }[]
@@ -235,6 +267,9 @@ isOneToOne: false
       } },
 "resolver_incidencia":
 { Args: { "p_aprobar": boolean,"p_incidencia_id": string }; Returns: string
+                           },
+"responder_incidencia":
+{ Args: { "p_comentario"?: string,"p_conforme": boolean,"p_incidencia_id": string }; Returns: string
                            },
 "verificar_reporte":
 { Args: { "p_reporte_id": string }; Returns: {
@@ -494,6 +529,11 @@ isOneToOne: false
                            },
 "crear_particion_evento":
 { Args: { "p_mes": string }; Returns: string
+                           },
+"detalle_marcajes":
+{ Args: { "p_desde": string,"p_hasta": string,"p_tenant_id": string,"p_trabajador_id": string }; Returns: {
+              "anulado": boolean,"comentario_trabajador": string,"conformidad": string,"conformidad_en": string,"correccion_autorizo": string,"correccion_evento_id": string,"correccion_motivo": string,"correccion_registrada_en": string,"evento_id": string,"extemporanea": boolean,"fecha": string,"foto_estado": string,"fuera_de_geocerca": boolean,"hora_original": string,"hora_vigente": string,"incidencia_id": string,"incidencia_tipo": string,"origen": string,"solicitada_por": string,"tipo": string,"ts_servidor": string
+            }[]
                            },
 "distancia_m":
 { Args: { "p_lat1": number,"p_lat2": number,"p_lng1": number,"p_lng2": number }; Returns: number
@@ -800,14 +840,14 @@ isOneToOne: false
                   ]
                 },"usuario": {
                   Row: {
-                    "activo": boolean,"auth_user_id": string | null,"centro_id": string | null,"creado_en": string,"id": string,"rol": string,"tenant_id": string,"trabajador_id": string | null
+                    "activo": boolean,"auth_user_id": string | null,"centro_id": string | null,"creado_en": string,"id": string,"nombre": string | null,"rol": string,"tenant_id": string,"trabajador_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "activo"?: boolean,"auth_user_id"?: string | null,"centro_id"?: string | null,"creado_en"?: string,"id"?: string,"rol": string,"tenant_id": string,"trabajador_id"?: string | null
+                    "activo"?: boolean,"auth_user_id"?: string | null,"centro_id"?: string | null,"creado_en"?: string,"id"?: string,"nombre"?: string | null,"rol": string,"tenant_id": string,"trabajador_id"?: string | null
                   }
                   Update: {
-                    "activo"?: boolean,"auth_user_id"?: string | null,"centro_id"?: string | null,"creado_en"?: string,"id"?: string,"rol"?: string,"tenant_id"?: string,"trabajador_id"?: string | null
+                    "activo"?: boolean,"auth_user_id"?: string | null,"centro_id"?: string | null,"creado_en"?: string,"id"?: string,"nombre"?: string | null,"rol"?: string,"tenant_id"?: string,"trabajador_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -948,6 +988,9 @@ isOneToOne: false
                            },
 "llave_cifrado":
 { Args: { "p_tenant_id": string }; Returns: string
+                           },
+"nombre_de_usuario":
+{ Args: { "p_usuario_id": string }; Returns: string
                            },
 "puede_ver_trabajador":
 { Args: { "p_tenant_id": string,"p_trabajador_id": string }; Returns: boolean

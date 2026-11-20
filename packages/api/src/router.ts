@@ -5,6 +5,7 @@ import type { Ctx } from "./context.ts";
 import { ApiError, errorResponseFrom, fromDatabase, noAutenticado } from "./errors.ts";
 import * as d from "./documentos.ts";
 import * as h from "./handlers.ts";
+import * as i from "./incidencias.ts";
 import * as s from "./schemas.ts";
 
 type Metodo = "GET" | "POST" | "PATCH";
@@ -282,6 +283,49 @@ export const RUTAS: Ruta[] = [
     status: 201,
     handler: (ctx, { params, body, meta }) =>
       d.acceptDocumento(ctx, param(params, "id"), body.nombre, meta.origen),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/incidencias",
+    etiqueta: "Incidencias",
+    resumen: "Incidencias visibles para quien llama, con filtros por estado, centro y persona.",
+    query: i.incidenciasFiltro,
+    handler: (ctx, { query }) => i.listIncidencias(ctx, query),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/incidencias",
+    etiqueta: "Incidencias",
+    resumen:
+      "Abre una incidencia (olvido, corrección de hora, permiso, trabajo desde casa o falta justificada).",
+    body: i.incidenciaCrear,
+    status: 201,
+    handler: (ctx, { body }) => i.createIncidencia(ctx, body),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/incidencias/{id}/resolucion",
+    etiqueta: "Incidencias",
+    resumen: "Aprueba o rechaza una incidencia. Al aprobar se inserta el evento que corresponde.",
+    body: i.incidenciaResolver,
+    handler: (ctx, { params, body }) => i.resolveIncidencia(ctx, param(params, "id"), body.aprobar),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/incidencias/{id}/respuesta",
+    etiqueta: "Incidencias",
+    resumen: "El trabajador manifiesta su conformidad o inconformidad con una incidencia.",
+    body: i.incidenciaResponder,
+    handler: (ctx, { params, body }) => i.respondIncidencia(ctx, param(params, "id"), body),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/marcajes",
+    etiqueta: "Días",
+    resumen:
+      "Marcajes de una persona entre dos fechas: hora original, hora vigente, corrección y conformidad.",
+    query: i.detalleDias,
+    handler: (ctx, { query }) => i.getDetalleMarcajes(ctx, query),
   }),
   ruta({
     metodo: "GET",

@@ -312,6 +312,9 @@ export function Marcador(props: Props) {
           Mis documentos
         </Link>
       )}
+      <Link href="/app/incidencias" className="text-pequeno text-text-secondary underline">
+        ¿Olvidaste marcar o hay un error? Repórtalo
+      </Link>
 
       {rechazados.map((marca) => (
         <div
