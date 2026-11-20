@@ -77,7 +77,7 @@ export async function htmlToPdf(pagina: PaginaPdf): Promise<Uint8Array<ArrayBuff
       margin: { top: "18mm", bottom: "20mm", left: "18mm", right: "18mm" },
       displayHeaderFooter: true,
       headerTemplate: "<span></span>",
-      footerTemplate: `<div style="width:100%;padding:0 18mm;font-family:Helvetica,Arial,sans-serif;font-size:7pt;color:#6b7280;display:flex;justify-content:space-between"><span>${escapar(pagina.pie)}</span><span>Página <span class="pageNumber"></span> de <span class="totalPages"></span></span></div>`,
+      footerTemplate: `<div style="width:100%;padding:0 18mm;font-family:Helvetica,Arial,sans-serif;font-size:7pt;color:#6b7280;display:flex;justify-content:space-between"><span>${escapar(pagina.pie)}</span><span style="white-space:nowrap;margin-left:12px">Página <span class="pageNumber"></span> de <span class="totalPages"></span></span></div>`,
     });
     return new Uint8Array(pdf);
   } finally {
