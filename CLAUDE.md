@@ -48,6 +48,8 @@ Las tablas derivadas (`dia_laboral`, `resumen_periodo`) deben poder reconstruirs
 
 `hash = SHA-256(hash_prev || tenant_id || trabajador_id || tipo || ts_servidor || ts_dispositivo || origen || lat || lng || foto_hash || creado_por)`, donde `hash_prev` es el hash del evento anterior del mismo trabajador (cadena por trabajador). El sello diario guarda la raíz Merkle de los eventos del día por tenant.
 
+Esa es la versión 1. La versión 2 agrega `ts_declarado` y la 3 `foto_estado` y `foto_motivo`; cada evento se verifica con su versión (`hash_version`). Detalle en `docs/hash-encadenado.md`.
+
 ## Calendario legal (precargar en `calculo.regla`)
 
 | Vigente desde | Jornada máx. semanal | Tope extra semanal | Tope extra diario | Jornada total máx. diaria |

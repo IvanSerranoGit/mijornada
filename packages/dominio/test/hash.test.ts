@@ -81,6 +81,34 @@ describe("hash del evento", () => {
     );
   });
 
+  it("la versión 3 antepone v3 y agrega ts_declarado, foto_estado y foto_motivo", async () => {
+    const v3: EventHashInput = { ...entrada, hashVersion: 3, fotoEstado: "no_requerida" };
+    expect(canonicalEventString(v3)).toBe(`v3|${canonicalEventString(entrada)}||no_requerida|`);
+    expect(
+      canonicalEventString({
+        ...v3,
+        fotoEstado: "no_disponible",
+        fotoMotivo: "NotReadableError: cámara ocupada",
+      }).endsWith("||no_disponible|NotReadableError: cámara ocupada"),
+    ).toBe(true);
+
+    // Cambiar el estado o el motivo cambia el hash; ninguna versión coincide con otra.
+    const hashes = await Promise.all([
+      computeEventHash(entrada),
+      computeEventHash({ ...entrada, hashVersion: 2 }),
+      computeEventHash(v3),
+      computeEventHash({ ...v3, fotoEstado: "sin_camara" }),
+      computeEventHash({ ...v3, fotoEstado: "no_disponible", fotoMotivo: "a" }),
+      computeEventHash({ ...v3, fotoEstado: "no_disponible", fotoMotivo: "b" }),
+    ]);
+    expect(new Set(hashes).size).toBe(6);
+    // En las versiones 1 y 2 el estado de la foto no entra al hash.
+    expect(await computeEventHash({ ...entrada, fotoEstado: "sin_camara" })).toBe(hashes[0]);
+    expect(await computeEventHash({ ...entrada, hashVersion: 2, fotoEstado: "sin_camara" })).toBe(
+      hashes[1],
+    );
+  });
+
   it("es determinista: la misma entrada da siempre el mismo hash", async () => {
     const [a, b] = await Promise.all([computeEventHash(entrada), computeEventHash({ ...entrada })]);
     expect(a).toBe(b);

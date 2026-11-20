@@ -128,6 +128,14 @@ export const usuarioActualizar = z
 
 // ---------------------------------------------------------------- eventos
 
+/**
+ * Lo que un dispositivo puede declarar cuando no manda foto. El estado final
+ * (ok, no_disponible, sin_camara, no_requerida) lo fija la base al insertar.
+ */
+export const fotoEstadoDeclarado = z.enum(["no_disponible", "sin_camara"]);
+/** Motivo técnico corto de por qué no hay foto (sin datos personales). */
+export const fotoMotivo = z.string().trim().max(120);
+
 export const eventoCrear = z.object({
   trabajador_id: uuid,
   client_event_id: uuid,
@@ -139,6 +147,8 @@ export const eventoCrear = z.object({
   precision_m: z.number().min(0).max(1_000_000).nullish(),
   foto_hash: sha256.nullish(),
   foto_url: z.string().max(500).nullish(),
+  foto_estado: fotoEstadoDeclarado.optional(),
+  foto_motivo: fotoMotivo.optional(),
   dispositivo_id: z.string().trim().max(120).nullish(),
 });
 

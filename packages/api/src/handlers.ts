@@ -425,6 +425,8 @@ export interface SemanaTrabajador {
     estado: string | null;
     entrada: string | null;
     salida: string | null;
+    /** Marcajes del día sin foto por fallo técnico o por falta de cámara. */
+    fotosNoDisponibles: number;
   }[];
   resumen: ResumenSemana;
   estado: EstadoSemana;
@@ -434,7 +436,14 @@ export interface PanelSemanal {
   hoy: string;
   lunes: string;
   zonaHoraria: string;
-  centros: { id: string; nombre: string; zona_horaria: string; metodo_marcaje: string | null }[];
+  centros: {
+    id: string;
+    nombre: string;
+    zona_horaria: string;
+    metodo_marcaje: string | null;
+    /** El centro pide foto en kiosco y su kiosco vinculado marcó sin cámara. */
+    kioscoSinCamara: boolean;
+  }[];
   trabajadores: SemanaTrabajador[];
 }
 
@@ -449,7 +458,7 @@ export async function getPanelSemanal(ctx: Ctx, ahora: Date = new Date()): Promi
   const lunes = mondayOf(hoy);
   const domingo = addDays(lunes, 6);
 
-  const [centros, trabajadores, horarios, dias, reglas, eventos] = await Promise.all([
+  const [centros, trabajadores, horarios, dias, reglas, eventos, sinCamara] = await Promise.all([
     listCentros(ctx),
     listTrabajadores(ctx, { limite: 200 }),
     ctx.db
@@ -473,8 +482,16 @@ export async function getPanelSemanal(ctx: Ctx, ahora: Date = new Date()): Promi
       .gte("ts_servidor", new Date(ahora.getTime() - 36 * 3_600_000).toISOString())
       .order("ts_servidor", { ascending: false })
       .limit(1000),
+    // Kioscos vinculados cuyo último marcaje dijo que no tienen cámara.
+    ctx.db
+      .schema("tenants")
+      .from("dispositivo")
+      .select("centro_id")
+      .not("vinculado_en", "is", null)
+      .is("revocado_en", null)
+      .eq("camara_disponible", false),
   ]);
-  for (const result of [horarios, dias, reglas, eventos]) {
+  for (const result of [horarios, dias, reglas, eventos, sinCamara]) {
     if (result.error) throw fromDatabase(result.error);
   }
 
@@ -506,6 +523,7 @@ export async function getPanelSemanal(ctx: Ctx, ahora: Date = new Date()): Promi
           estado: dia?.estado ?? null,
           entrada: dia?.entrada ?? null,
           salida: dia?.salida ?? null,
+          fotosNoDisponibles: dia?.fotos_no_disponibles ?? 0,
           pactada: horario
             ? scheduledMinutes(horario.hora_entrada, horario.hora_salida)
             : undefined,
@@ -548,6 +566,7 @@ export async function getPanelSemanal(ctx: Ctx, ahora: Date = new Date()): Promi
           estado: d.estado,
           entrada: d.entrada,
           salida: d.salida,
+          fotosNoDisponibles: d.fotosNoDisponibles,
         })),
         resumen,
         estado: weekStatus(resumen, vigentes, t.menor_de_edad),
@@ -563,6 +582,7 @@ export async function getPanelSemanal(ctx: Ctx, ahora: Date = new Date()): Promi
       nombre: c.nombre,
       zona_horaria: c.zona_horaria,
       metodo_marcaje: c.metodo_marcaje,
+      kioscoSinCamara: c.foto_en_kiosco && (sinCamara.data ?? []).some((d) => d.centro_id === c.id),
     })),
     trabajadores: semana,
   };

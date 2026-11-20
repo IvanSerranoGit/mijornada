@@ -7,6 +7,8 @@
 //   v1: los once campos de la fórmula original.
 //   v2: el prefijo "v2", los once campos y ts_declarado (la hora que se afirma que
 //       ocurrió el marcaje, en correcciones y marcajes por incidencia).
+//   v3: el prefijo "v3", los once campos, ts_declarado, foto_estado y foto_motivo
+//       (qué pasó con la foto del marcaje y, si falló, el motivo técnico).
 //
 // Cada evento guarda su versión (jornada.evento.hash_version) y se verifica con ella.
 
@@ -24,11 +26,19 @@ export interface EventHashInput {
   lng: string | number | null;
   fotoHash: string | null;
   creadoPor: string;
-  /** Solo entra al hash en la versión 2. */
+  /** Entra al hash desde la versión 2. */
   tsDeclarado?: string | Date | null;
+  /** Entra al hash desde la versión 3. */
+  fotoEstado?: FotoEstado | null;
+  /** Motivo técnico cuando fotoEstado es "no_disponible". Entra al hash desde la versión 3. */
+  fotoMotivo?: string | null;
   /** Versión de la fórmula; 1 si se omite. */
-  hashVersion?: 1 | 2;
+  hashVersion?: 1 | 2 | 3;
 }
+
+/** Qué pasó con la foto de un marcaje (jornada.evento.foto_estado). */
+export const FOTO_ESTADOS = ["ok", "no_disponible", "sin_camara", "no_requerida"] as const;
+export type FotoEstado = (typeof FOTO_ESTADOS)[number];
 
 const CANONICAL_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/;
 const CANONICAL_COORDINATE = /^-?\d+\.\d{6}$/;
@@ -101,11 +111,15 @@ export function canonicalEventString(event: EventHashInput): string {
     event.fotoHash ?? "",
     event.creadoPor,
   ];
-  if ((event.hashVersion ?? 1) === 1) {
+  const version = event.hashVersion ?? 1;
+  if (version === 1) {
     return v1.join("|");
   }
   const tsDeclarado = event.tsDeclarado == null ? "" : canonicalTimestamp(event.tsDeclarado);
-  return ["v2", ...v1, tsDeclarado].join("|");
+  if (version === 2) {
+    return ["v2", ...v1, tsDeclarado].join("|");
+  }
+  return ["v3", ...v1, tsDeclarado, event.fotoEstado ?? "", event.fotoMotivo ?? ""].join("|");
 }
 
 /** SHA-256 encadenado del evento, en hexadecimal. */

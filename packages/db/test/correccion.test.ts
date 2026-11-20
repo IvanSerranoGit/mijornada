@@ -1,5 +1,5 @@
 // Hora declarada de las correcciones, conformidad del trabajador y hash versión 2.
-import { computeEventHash, type EventHashInput } from "@mijornada/dominio";
+import { computeEventHash, verifyChain, type ChainEvent } from "@mijornada/dominio";
 import { afterAll, describe, expect, it } from "vitest";
 import {
   asUser,
@@ -115,7 +115,7 @@ describe("corrección de hora", () => {
         motivo: "Se me olvidó marcar",
         creado_por: t.supervisorA.usuario_id,
         referencia_evento_id: salida,
-        hash_version: 2,
+        hash_version: 3,
         declarada: "18:00",
         registrada_ahora: true,
       });
@@ -234,8 +234,8 @@ describe("olvido de marca y conformidad del trabajador", () => {
   });
 });
 
-describe("hash versión 2", () => {
-  it("los eventos nuevos usan la versión 2, coinciden con dominio y conviven con los de versión 1", async () => {
+describe("versiones del hash", () => {
+  it("los eventos nuevos usan la versión 3, coinciden con dominio y conviven con los de versiones 1 y 2", async () => {
     await inRollback(async (tx) => {
       const t = await createTenant(tx, "Uno");
       const entrada = await mark(tx, t, "entrada", "2026-11-10 09:00");
@@ -243,45 +243,68 @@ describe("hash versión 2", () => {
         insert into jornada.evento (tenant_id, trabajador_id, tipo, origen, creado_por, motivo, referencia_evento_id, ts_declarado)
         values (${t.tenantId}, ${t.trabajadorA}, 'correccion', 'incidencia', ${t.dueno.usuario_id}, 'Llegó antes',
                 ${entrada}, '2026-11-10T14:45:00.123456Z')`;
+      await tx`
+        insert into jornada.evento (tenant_id, trabajador_id, tipo, origen, creado_por, ts_dispositivo, foto_estado, foto_motivo)
+        values (${t.tenantId}, ${t.trabajadorA}, 'salida', 'import', ${t.dueno.usuario_id}, '2026-11-10T23:00:00Z',
+                'no_disponible', 'NotReadableError: cámara ocupada')`;
 
-      const chain = () => tx<(EventHashInput & { id: string; hash: string })[]>`
+      const chain = () => tx<ChainEvent[]>`
         select id, hash, hash_prev as "hashPrev", tenant_id as "tenantId", trabajador_id as "trabajadorId", tipo,
                to_char(ts_servidor at time zone 'UTC', ${sql.unsafe(TS)}) as "tsServidor",
                to_char(ts_dispositivo at time zone 'UTC', ${sql.unsafe(TS)}) as "tsDispositivo",
                origen, lat::text as lat, lng::text as lng, foto_hash as "fotoHash", creado_por as "creadoPor",
                hash_version as "hashVersion",
-               to_char(ts_declarado at time zone 'UTC', ${sql.unsafe(TS)}) as "tsDeclarado"
+               to_char(ts_declarado at time zone 'UTC', ${sql.unsafe(TS)}) as "tsDeclarado",
+               foto_estado as "fotoEstado", foto_motivo as "fotoMotivo"
         from jornada.evento where tenant_id = ${t.tenantId} order by ts_servidor, id`;
 
       const eventos = await chain();
-      expect(eventos.map((e) => e.hashVersion)).toEqual([2, 2]);
+      expect(eventos.map((e) => e.hashVersion)).toEqual([3, 3, 3]);
+      expect(eventos.map((e) => e.fotoEstado)).toEqual([
+        "no_requerida",
+        "no_requerida",
+        "no_disponible",
+      ]);
       expect(eventos[1]?.tsDeclarado).toBe("2026-11-10T14:45:00.123456Z");
       for (const evento of eventos) expect(evento.hash).toBe(await computeEventHash(evento));
 
-      // Un evento anterior a esta versión (v1) sigue verificándose con su fórmula.
+      // Se reescribe la cadena como si el primer evento fuera anterior a ts_declarado (v1)
+      // y el segundo anterior a foto_estado (v2): cada uno se verifica con su fórmula.
       await tx`set local session_replication_role = replica`;
-      const v1 = { ...eventos[0], hashVersion: 1 as const } as EventHashInput;
-      await tx`update jornada.evento set hash_version = 1, hash = ${await computeEventHash(v1)} where id = ${entrada}`;
-      await tx`update jornada.evento set hash_prev = ${await computeEventHash(v1)} where id = ${eventos[1]?.id ?? ""}`;
-      const segundo = (await chain())[1];
-      if (segundo === undefined) throw new Error("falta el segundo evento");
-      await tx`update jornada.evento set hash = ${await computeEventHash(segundo)} where id = ${segundo.id}`;
+      let hashPrev: string | null = null;
+      for (const [index, evento] of eventos.entries()) {
+        const version = ([1, 2, 3] as const)[index] ?? 3;
+        const hash = await computeEventHash({ ...evento, hashPrev, hashVersion: version });
+        await tx`update jornada.evento set hash_version = ${version}, hash_prev = ${hashPrev}, hash = ${hash}
+                 where id = ${evento.id}`;
+        hashPrev = hash;
+      }
       await tx`set local session_replication_role = origin`;
 
       const verify = async () => {
         const [row] =
-          await tx`select integra, motivo from jornada.verificar_cadena(${t.tenantId}, ${t.trabajadorA})`;
+          await tx`select integra, n_eventos, motivo from jornada.verificar_cadena(${t.tenantId}, ${t.trabajadorA})`;
         return row;
       };
-      expect(await verify()).toMatchObject({ integra: true });
+      expect(await verify()).toMatchObject({ integra: true, n_eventos: "3" });
+      const mezclada = await chain();
+      expect(mezclada.map((e) => e.hashVersion)).toEqual([1, 2, 3]);
+      expect(await verifyChain(mezclada)).toEqual({ integra: true, nEventos: 3 });
 
-      // Alterar la hora declarada rompe la cadena.
+      // Alterar el estado de la foto de un evento v3 rompe la cadena, en la base y en dominio.
+      const tercero = mezclada[2];
+      if (tercero === undefined) throw new Error("falta el tercer evento");
       await tx`set local session_replication_role = replica`;
-      await tx`update jornada.evento set ts_declarado = ts_declarado + interval '1 hour' where id = ${segundo.id}`;
+      await tx`update jornada.evento set foto_estado = 'sin_camara', foto_motivo = null where id = ${tercero.id}`;
       await tx`set local session_replication_role = origin`;
       expect(await verify()).toMatchObject({
         integra: false,
         motivo: "el hash no corresponde al contenido del evento",
+      });
+      expect(await verifyChain(await chain())).toMatchObject({
+        integra: false,
+        eventoRotoId: tercero.id,
+        motivo: "hash",
       });
     });
   });

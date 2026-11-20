@@ -43,6 +43,7 @@ function FilaSemana({
   zona: string;
 }) {
   const extra = semana.resumen.minutosExtraDobles + semana.resumen.minutosExtraTriples;
+  const sinFoto = semana.dias.reduce((total, dia) => total + dia.fotosNoDisponibles, 0);
   return (
     <li className="flex flex-col gap-(--espacio-sm) py-(--espacio-md)">
       <div className="flex flex-wrap items-center justify-between gap-(--espacio-sm)">
@@ -64,7 +65,13 @@ function FilaSemana({
         {semana.dias.map((dia, index) => (
           <div key={dia.fecha} className="flex flex-1 flex-col items-center gap-(--espacio-2xs)">
             <span
-              title={dia.estado === "incompleto" ? "Falta una marca" : undefined}
+              title={
+                dia.estado === "incompleto"
+                  ? "Falta una marca"
+                  : dia.fotosNoDisponibles > 0
+                    ? "Foto no disponible"
+                    : undefined
+              }
               className={cx(
                 "w-full rounded-(--radio-sm) py-(--espacio-2xs) text-center text-nota",
                 dia.fecha === hoy && "ring-1 ring-border-brand",
@@ -85,6 +92,11 @@ function FilaSemana({
           </div>
         ))}
       </div>
+      {sinFoto > 0 ? (
+        <p className="text-pequeno text-status-warning-text">
+          Foto no disponible en {sinFoto} {sinFoto === 1 ? "marca" : "marcas"} de esta semana.
+        </p>
+      ) : null}
 
       <p className="text-pequeno text-text-secondary">
         {horas(semana.resumen.minutosOrdinarios)} ordinarias
@@ -141,6 +153,15 @@ export default async function PanelPage() {
           <Tarjeta key={centro.id}>
             <h2 className="font-titulo text-titulo-3 font-bold">{centro.nombre}</h2>
             <p className="text-pequeno text-text-secondary">Semana en curso · horas por día</p>
+            {centro.kioscoSinCamara ? (
+              <p
+                role="status"
+                className="my-(--espacio-sm) rounded-(--radio-md) bg-status-warning-soft p-(--espacio-sm) text-pequeno text-status-warning-text"
+              >
+                El kiosco de este centro no tiene cámara o no dio permiso para usarla: las marcas se
+                registran sin foto.
+              </p>
+            ) : null}
             {centro.metodo_marcaje !== "telefono" ? <AccionesKiosco centroId={centro.id} /> : null}
             {delCentro.length === 0 ? (
               <p className="py-(--espacio-md) text-text-secondary">

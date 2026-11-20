@@ -64,7 +64,15 @@ interface Marca {
 const kioskMark =
   (
     token: string,
-    args: { pin?: string; qr?: string; clientEventId?: string; fotoHash?: string; atraso?: string },
+    args: {
+      pin?: string;
+      qr?: string;
+      clientEventId?: string;
+      fotoHash?: string;
+      atraso?: string;
+      fotoEstado?: string;
+      fotoMotivo?: string;
+    },
   ) =>
   (tx: Tx) => tx<Marca[]>`
     select evento_id, duplicado, nombre, tipo, foto_url
@@ -74,7 +82,9 @@ const kioskMark =
       p_ts_dispositivo => now() - ${args.atraso ?? "0 seconds"}::interval,
       p_pin => ${args.pin ?? null},
       p_qr => ${args.qr ?? null},
-      p_foto_hash => ${args.fotoHash ?? null})`;
+      p_foto_hash => ${args.fotoHash ?? null},
+      p_foto_estado => ${args.fotoEstado ?? null},
+      p_foto_motivo => ${args.fotoMotivo ?? null})`;
 
 describe("kiosco", () => {
   it("el código de enlace se canjea una sola vez por un token de dispositivo", async () => {
@@ -277,6 +287,117 @@ describe("invitaciones", () => {
 
       await tx`update tenants.intento_pin set bloqueado_hasta = now() - interval '1 minute' where trabajador_id = ${ana.id}`;
       expect((await check(ana.pin)(tx))[0]?.ok).toBe(true);
+    });
+  });
+});
+
+describe("estado de la foto", () => {
+  const estados = (tx: Tx, t: Tenant) => tx<{ foto_estado: string; foto_motivo: string | null }[]>`
+    select foto_estado, foto_motivo from jornada.evento where tenant_id = ${t.tenantId} order by ts_servidor, id`;
+
+  const pwaMark =
+    (t: Tenant, extra: { fotoHash?: string; fotoEstado?: string; fotoMotivo?: string }) =>
+    (tx: Tx) => tx`
+      insert into jornada.evento (tenant_id, trabajador_id, tipo, origen, creado_por, ts_dispositivo, foto_hash, foto_estado, foto_motivo)
+      values (${t.tenantId}, ${t.trabajadorA}, 'entrada', 'pwa', ${t.empleadoA.usuario_id}, now(),
+              ${extra.fotoHash ?? null}, ${extra.fotoEstado ?? null}, ${extra.fotoMotivo ?? null})`;
+
+  it("lo fija el servidor: con foto es ok; sin foto depende de lo declarado y de si el centro la pide", async () => {
+    await inRollback(async (tx) => {
+      const t = await createTenant(tx, "Uno");
+      const set = (requerida: boolean) =>
+        tx`update tenants.centro_trabajo set foto_en_telefono = ${requerida} where id = ${t.centroA}`;
+
+      await set(false);
+      await asUser(tx, t.empleadoA, async () => {
+        // El centro no pide foto.
+        await pwaMark(t, {})(tx);
+        // Decir "ok" sin foto no vale.
+        await pwaMark(t, { fotoEstado: "ok" })(tx);
+      });
+      await set(true);
+      await asUser(tx, t.empleadoA, async () => {
+        // Con foto siempre es ok, diga lo que diga el dispositivo.
+        await pwaMark(t, { fotoHash: "a".repeat(64), fotoEstado: "sin_camara" })(tx);
+        // El dispositivo declara qué pasó.
+        await pwaMark(t, { fotoEstado: "sin_camara", fotoMotivo: "se ignora" })(tx);
+        await pwaMark(t, { fotoEstado: "no_disponible", fotoMotivo: `  ${"x".repeat(200)}` })(tx);
+        await pwaMark(t, { fotoEstado: "no_disponible" })(tx);
+        // No declara nada y el centro pide foto.
+        await pwaMark(t, {})(tx);
+      });
+
+      expect(await estados(tx, t)).toEqual([
+        { foto_estado: "no_requerida", foto_motivo: null },
+        { foto_estado: "no_requerida", foto_motivo: null },
+        { foto_estado: "ok", foto_motivo: null },
+        { foto_estado: "sin_camara", foto_motivo: null },
+        { foto_estado: "no_disponible", foto_motivo: "x".repeat(120) },
+        { foto_estado: "no_disponible", foto_motivo: "sin detalle" },
+        { foto_estado: "no_disponible", foto_motivo: "el dispositivo no informó el motivo" },
+      ]);
+
+      const [cadena] = await tx<{ integra: boolean }[]>`
+        select integra from jornada.verificar_cadena(${t.tenantId}, ${t.trabajadorA})`;
+      expect(cadena?.integra).toBe(true);
+    });
+  });
+
+  it("el día laboral cuenta los marcajes sin foto por fallo o falta de cámara", async () => {
+    await inRollback(async (tx) => {
+      const t = await createTenant(tx, "Uno");
+      await tx`update tenants.centro_trabajo set foto_en_telefono = true where id = ${t.centroA}`;
+      const dia = async () => {
+        const [row] = await tx<{ fotos_no_disponibles: number; estado: string }[]>`
+          select fotos_no_disponibles, estado from jornada.dia_laboral
+          where tenant_id = ${t.tenantId} and trabajador_id = ${t.trabajadorA}`;
+        return row;
+      };
+
+      await asUser(tx, t.empleadoA, async () => {
+        await pwaMark(t, { fotoHash: "b".repeat(64) })(tx);
+      });
+      expect(await dia()).toEqual({ fotos_no_disponibles: 0, estado: "incompleto" });
+
+      await asUser(tx, t.empleadoA, async () => {
+        await tx`
+          insert into jornada.evento (tenant_id, trabajador_id, tipo, origen, creado_por, ts_dispositivo, foto_estado, foto_motivo)
+          values (${t.tenantId}, ${t.trabajadorA}, 'salida', 'pwa', ${t.empleadoA.usuario_id}, now(),
+                  'no_disponible', 'UnknownError')`;
+      });
+      expect(await dia()).toEqual({ fotos_no_disponibles: 1, estado: "completo" });
+    });
+  });
+
+  it("el kiosco sin cámara marca sin_camara y el dispositivo queda señalado hasta que vuelve a mandar foto", async () => {
+    await inRollback(async (tx) => {
+      const t = await createTenant(tx, "Uno");
+      await tx`update tenants.centro_trabajo set foto_en_kiosco = true where id = ${t.centroA}`;
+      const ana = await hire(tx, t, t.centroA, "Ana Ruiz");
+      const { token } = await linkKiosk(tx, t, t.centroA);
+      const camara = async () => {
+        const rows = await asUser(
+          tx,
+          t.dueno,
+          () => tx<{ camara_disponible: boolean | null }[]>`
+            select camara_disponible from tenants.dispositivo where vinculado_en is not null`,
+        );
+        return rows[0]?.camara_disponible;
+      };
+      expect(await camara()).toBeNull();
+
+      await asRole(tx, "anon", async () => {
+        await kioskMark(token, { pin: ana.pin, fotoEstado: "sin_camara" })(tx);
+      });
+      expect(await camara()).toBe(false);
+      const [evento] = await tx<{ foto_estado: string; tipo: string }[]>`
+        select foto_estado, tipo from jornada.evento where trabajador_id = ${ana.id}`;
+      expect(evento).toEqual({ foto_estado: "sin_camara", tipo: "entrada" });
+
+      await asRole(tx, "anon", async () => {
+        await kioskMark(token, { pin: ana.pin, fotoHash: "c".repeat(64) })(tx);
+      });
+      expect(await camara()).toBe(true);
     });
   });
 });

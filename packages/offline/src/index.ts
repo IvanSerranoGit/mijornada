@@ -43,24 +43,14 @@ export class ColaMarcajes<P> {
 
   /**
    * Guarda la marca. La foto se guarda como bytes porque Safari (iPhone, iPad) puede
-   * fallar al guardar un Blob en IndexedDB. Si aun así la foto no se puede guardar,
-   * la marca se guarda sin ella: registrar la jornada nunca se bloquea por la foto.
-   * Devuelve false en ese caso.
+   * fallar al guardar un Blob en IndexedDB. Si la foto no se puede guardar, lanza el
+   * error: quien llama decide guardar la marca sin foto y declarar el motivo
+   * (foto_estado), porque registrar la jornada nunca se bloquea por la foto.
    */
-  async add(marca: Omit<MarcaPendiente<P>, "estado" | "intentos">): Promise<boolean> {
+  async add(marca: Omit<MarcaPendiente<P>, "estado" | "intentos">): Promise<void> {
     const { foto, ...resto } = marca;
     const fila: Fila<P> = { ...resto, estado: "pendiente", intentos: 0 };
-    if (foto) {
-      try {
-        await this.marcas.put({ ...fila, fotoBytes: await foto.arrayBuffer() });
-        return true;
-      } catch {
-        await this.marcas.put(fila);
-        return false;
-      }
-    }
-    await this.marcas.put(fila);
-    return true;
+    await this.marcas.put(foto ? { ...fila, fotoBytes: await foto.arrayBuffer() } : fila);
   }
 
   private async leer(estado: MarcaPendiente<P>["estado"]): Promise<MarcaPendiente<P>[]> {
@@ -220,7 +210,8 @@ export async function fotoDesdeArchivo(archivo: Blob, lado = 640): Promise<Blob>
   }
 }
 
-function describirError(error: unknown): string {
+/** Nombre y mensaje de un error, recortado: sirve de motivo técnico corto. */
+export function describirError(error: unknown): string {
   return (error instanceof Error ? `${error.name}: ${error.message}` : String(error)).slice(0, 500);
 }
 

@@ -4,6 +4,7 @@ import { bytesToHex, sha256 } from "@mijornada/dominio";
 import { z } from "zod";
 import type { Db } from "./context.ts";
 import { ApiError, errorResponseFrom, fromDatabase } from "./errors.ts";
+import { fotoEstadoDeclarado, fotoMotivo } from "./schemas.ts";
 
 export const kioscoVincular = z.object({
   codigo: z
@@ -26,6 +27,8 @@ export const kioscoMarcar = z
       .string()
       .regex(/^[0-9a-f]{64}$/)
       .optional(),
+    foto_estado: fotoEstadoDeclarado.optional(),
+    foto_motivo: fotoMotivo.optional(),
   })
   .refine((v) => v.pin !== undefined || v.qr !== undefined, "Falta el PIN o el código QR.");
 
@@ -62,6 +65,8 @@ export async function marcarEnKiosco(publico: Db, token: string, input: KioscoMa
     ...(input.pin === undefined ? {} : { p_pin: input.pin }),
     ...(input.qr === undefined ? {} : { p_qr: input.qr }),
     ...(input.foto_hash === undefined ? {} : { p_foto_hash: input.foto_hash }),
+    ...(input.foto_estado === undefined ? {} : { p_foto_estado: input.foto_estado }),
+    ...(input.foto_motivo === undefined ? {} : { p_foto_motivo: input.foto_motivo }),
   });
   if (error) throw fromDatabase(error);
   const marca = data[0];

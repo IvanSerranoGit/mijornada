@@ -35,7 +35,9 @@ async function readChain(tx: Tx, tenant: Tenant, trabajadorId: string): Promise<
            foto_hash as "fotoHash",
            creado_por as "creadoPor",
            hash_version as "hashVersion",
-           to_char(ts_declarado at time zone 'UTC', ${sql.unsafe(TS)}) as "tsDeclarado"
+           to_char(ts_declarado at time zone 'UTC', ${sql.unsafe(TS)}) as "tsDeclarado",
+           foto_estado as "fotoEstado",
+           foto_motivo as "fotoMotivo"
     from jornada.evento
     where tenant_id = ${tenant.tenantId} and trabajador_id = ${trabajadorId}
     order by ts_servidor, id`;
