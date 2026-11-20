@@ -10,7 +10,7 @@ project_id = "mijornada"
 
 [api]
 # Esquemas que expone la API: los que consumen web, PWA y kiosco.
-schemas = ["public", "graphql_public", "tenants", "jornada", "calculo"]
+schemas = ["public", "graphql_public", "tenants", "jornada", "calculo", "cumplimiento"]
 
 [auth]
 site_url = "https://mijornada.xyz"

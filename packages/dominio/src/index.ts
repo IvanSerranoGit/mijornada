@@ -18,3 +18,4 @@ export * from "./hash.ts";
 export * from "./merkle.ts";
 export * from "./uuid.ts";
 export * from "./sectores.ts";
+export * from "./documentos.ts";
