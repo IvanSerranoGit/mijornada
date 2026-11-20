@@ -10,6 +10,8 @@ async function handle(
   return handleKioscoRequest(request, ruta, {
     publico: createSupabasePublic(),
     admin: createSupabaseAdmin,
+    // Los enlaces del aviso de privacidad apuntan a la app web, no al kiosco.
+    origin: (process.env["NEXT_PUBLIC_SITE_URL"] ?? "https://mijornada.xyz").replace(/\/$/, ""),
   });
 }
 

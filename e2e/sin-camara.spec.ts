@@ -50,6 +50,10 @@ test("kiosco sin cámara: marca sin foto y el panel lo avisa", async ({ page, br
   await kiosco.getByRole("button", { name: "Vincular" }).click();
   await expect(kiosco.getByText("Teclea tu PIN")).toBeVisible();
   for (const digito of pin) await kiosco.getByRole("button", { name: digito, exact: true }).click();
+  // Primera marca de esta persona: el kiosco muestra el aviso de privacidad.
+  await expect(kiosco.getByRole("heading", { name: "Hola, Mariana López" })).toBeVisible();
+  await expect(kiosco.getByText(/usará tu nombre, puesto, horario/)).toBeVisible();
+  await kiosco.getByRole("button", { name: "Acepto y marco" }).click();
   await expect(kiosco.getByText("Entrada registrada")).toBeVisible();
   await tablet.close();
 
@@ -57,4 +61,18 @@ test("kiosco sin cámara: marca sin foto y el panel lo avisa", async ({ page, br
   await page.reload();
   await expect(page.getByText(/El kiosco de este centro no tiene cámara/)).toBeVisible();
   await expect(page.getByText("Foto no disponible en 1 marca de esta semana.")).toBeVisible();
+
+  // El aviso quedó aceptado en el kiosco; el convenio sigue pendiente hasta que lo firme.
+  await page.getByRole("link", { name: "Documentos" }).click();
+  await expect(page.getByRole("heading", { name: "Documentos", exact: true })).toBeVisible();
+  await expect(page.getByText("aceptó en el kiosco", { exact: false })).toBeVisible();
+  await expect(page.getByText("Consentimiento pendiente")).toBeVisible();
+  const href = await page
+    .getByRole("link", { name: "Descargar PDF en blanco para imprimir" })
+    .first()
+    .getAttribute("href");
+  const pdf = await page.request.get(`${WEB}${href ?? ""}`);
+  expect(pdf.status()).toBe(200);
+  expect(pdf.headers()["content-type"]).toBe("application/pdf");
+  expect((await pdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
 });

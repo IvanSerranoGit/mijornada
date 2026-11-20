@@ -43,6 +43,14 @@ interface Marca {
   foto_url: string | null;
 }
 
+/** Aviso de privacidad que una persona todavía no acepta; se muestra antes de su marca. */
+interface AvisoPendiente {
+  credencial: { pin: string } | { qr: string };
+  nombre: string;
+  documento_id: string;
+  resumen_html: string;
+}
+
 type Confirmacion =
   | { clase: "ok"; nombre: string; tipo: string; hora: string }
   | { clase: "pendiente"; hora: string }
@@ -189,6 +197,7 @@ function Marcaje({
   const [pendientes, setPendientes] = useState(0);
   const [ocupado, setOcupado] = useState(false);
   const [confirmacion, setConfirmacion] = useState<Confirmacion | null>(null);
+  const [aviso, setAviso] = useState<AvisoPendiente | null>(null);
   const video = useRef<HTMLVideoElement>(null);
   const respuestas = useRef(new Map<string, Marca | { error: string }>());
   const necesitaCamara = vinculo.foto || modo === "qr";
@@ -376,6 +385,83 @@ function Marcaje({
     [ocupado, sincronizar, vinculo.foto, vinculo.zona_horaria],
   );
 
+  /**
+   * Antes de marcar se pregunta si la persona tiene pendiente el aviso de privacidad.
+   * Si lo tiene, se le muestra; si no hay red o la consulta falla, se marca directo:
+   * registrar la jornada nunca espera al consentimiento.
+   */
+  const identificar = useCallback(
+    async (credencial: { pin: string } | { qr: string }) => {
+      if (ocupado || aviso) return;
+      if (navigator.onLine) {
+        try {
+          const response = await api(
+            "/aviso",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(credencial),
+              signal: AbortSignal.timeout(4000),
+            },
+            vinculo.token,
+          );
+          if (response.ok) {
+            const estado = (await response.json()) as
+              { pendiente: false } | ({ pendiente: true } & Omit<AvisoPendiente, "credencial">);
+            if (estado.pendiente) {
+              setPin("");
+              setModo("pin");
+              setAviso({ ...estado, credencial });
+              return;
+            }
+          }
+        } catch {
+          // Sin respuesta a tiempo: se marca sin preguntar.
+        }
+      }
+      await marcar(credencial);
+    },
+    [aviso, marcar, ocupado, vinculo.token],
+  );
+
+  /** "Acepto y marco": registra la aceptación y después la marca. */
+  const responderAviso = useCallback(
+    async (acepta: boolean) => {
+      if (!aviso) return;
+      setAviso(null);
+      if (acepta) {
+        try {
+          await api(
+            "/aviso/aceptar",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...aviso.credencial, documento_id: aviso.documento_id }),
+              signal: AbortSignal.timeout(8000),
+            },
+            vinculo.token,
+          );
+        } catch (error) {
+          // La aceptación se volverá a pedir en la siguiente marca.
+          reportarError("kiosco:aviso", error);
+        }
+      }
+      await marcar(aviso.credencial);
+    },
+    [aviso, marcar, vinculo.token],
+  );
+
+  // Si nadie responde al aviso en un minuto, la tablet vuelve al inicio sin marcar.
+  useEffect(() => {
+    if (!aviso) return;
+    const timer = setTimeout(() => {
+      setAviso(null);
+    }, 60_000);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [aviso]);
+
   // La confirmación dura 3 segundos y vuelve al inicio.
   useEffect(() => {
     if (!confirmacion) return;
@@ -401,12 +487,12 @@ function Marcaje({
       context.drawImage(camara, 0, 0);
       const imagen = context.getImageData(0, 0, canvas.width, canvas.height);
       const codigo = jsQR(imagen.data, imagen.width, imagen.height);
-      if (codigo && codigo.data.length >= 16) void marcar({ qr: codigo.data });
+      if (codigo && codigo.data.length >= 16) void identificar({ qr: codigo.data });
     }, 300);
     return () => {
       clearInterval(timer);
     };
-  }, [modo, marcar]);
+  }, [modo, identificar]);
 
   async function desvincular(pinAdmin: string) {
     setOcupado(true);
@@ -450,8 +536,48 @@ function Marcaje({
     setPin(nuevo);
     if (nuevo.length === largo) {
       if (modo === "admin") void desvincular(nuevo);
-      else void marcar({ pin: nuevo });
+      else void identificar({ pin: nuevo });
     }
+  }
+
+  if (aviso) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-(--espacio-lg) p-(--espacio-xl)">
+        <div>
+          <p className="text-etiqueta font-medium uppercase opacity-80">
+            Antes de tu primera marca
+          </p>
+          <h1 className="font-titulo text-titulo-1 font-bold">Hola, {aviso.nombre}</h1>
+        </div>
+        <div
+          className="documento rounded-(--radio-lg) bg-bg-surface p-(--espacio-lg) text-cuerpo text-text-primary"
+          dangerouslySetInnerHTML={{ __html: aviso.resumen_html }}
+        />
+        <p className="text-pequeno opacity-80">
+          El convenio completo lo puedes leer y firmar en tu celular, con el enlace que te comparta
+          tu empresa.
+        </p>
+        <div className="flex flex-col gap-(--espacio-sm)">
+          <Boton
+            tamano="l"
+            onClick={() => {
+              void responderAviso(true);
+            }}
+          >
+            Acepto y marco
+          </Boton>
+          <Boton
+            estilo="fantasma"
+            className="text-text-inverse"
+            onClick={() => {
+              void responderAviso(false);
+            }}
+          >
+            Marcar sin aceptar por ahora
+          </Boton>
+        </div>
+      </main>
+    );
   }
 
   if (confirmacion) {

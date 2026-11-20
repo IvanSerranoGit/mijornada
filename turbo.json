@@ -4,7 +4,15 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**"],
-      "env": ["NEXT_PUBLIC_*", "SUPABASE_SECRET_KEY", "CRON_SECRET"]
+      "env": [
+        "NEXT_PUBLIC_*",
+        "SUPABASE_SECRET_KEY",
+        "CRON_SECRET",
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+        "RESEND_API_KEY",
+        "CORREO_REMITENTE"
+      ]
     },
     "dev": {
       "cache": false,

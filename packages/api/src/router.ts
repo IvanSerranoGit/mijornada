@@ -2,16 +2,33 @@
 // Request y Response estándar, así que cualquier app puede montarla.
 import { z } from "zod";
 import type { Ctx } from "./context.ts";
+import { getEstadoCuenta } from "./cuenta.ts";
 import { ApiError, errorResponseFrom, fromDatabase, noAutenticado } from "./errors.ts";
+import * as d from "./documentos.ts";
 import * as h from "./handlers.ts";
+import * as i from "./incidencias.ts";
+import * as p from "./pagos.ts";
+import * as r from "./reportes.ts";
 import * as s from "./schemas.ts";
+import * as u from "./usuarios.ts";
 
 type Metodo = "GET" | "POST" | "PATCH";
+
+/** Datos de la petición que no vienen del cliente como datos: los deriva el servidor. */
+export interface Meta {
+  /** IP y navegador de quien llama (evidencia de las aceptaciones). */
+  origen: d.Origen;
+  /** Origen público del sitio (`https://mijornada.xyz`), para armar enlaces. */
+  origin: string;
+  /** PDF, QR y cliente de servicio que aporta el servidor que monta la API. */
+  servicios: r.Servicios;
+}
 
 interface Entrada {
   params: Record<string, string>;
   query: unknown;
   body: unknown;
+  meta: Meta;
 }
 
 export interface Ruta {
@@ -40,7 +57,7 @@ function ruta<Q extends z.ZodType = z.ZodUnknown, B extends z.ZodType = z.ZodUnk
   status?: number;
   handler: (
     ctx: Ctx,
-    entrada: { params: Record<string, string>; query: z.infer<Q>; body: z.infer<B> },
+    entrada: { params: Record<string, string>; query: z.infer<Q>; body: z.infer<B>; meta: Meta },
   ) => Promise<unknown>;
 }): Ruta {
   return def as Ruta;
@@ -133,6 +150,24 @@ export const RUTAS: Ruta[] = [
     etiqueta: "Usuarios",
     resumen: "Usuarios del tenant.",
     handler: (ctx) => h.listUsuarios(ctx),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/usuarios",
+    etiqueta: "Usuarios",
+    resumen:
+      "Invita a un administrador o supervisor: lo da de alta y le envía un enlace para fijar su contraseña.",
+    body: u.usuarioInvitar,
+    status: 201,
+    handler: (ctx, { body, meta }) => u.inviteUsuario(ctx, body, meta.servicios, meta.origin),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/equipo",
+    etiqueta: "Usuarios",
+    resumen:
+      "Dueño, administradores y supervisores, con su correo y si su invitación sigue pendiente.",
+    handler: (ctx) => u.listEquipo(ctx),
   }),
   ruta({
     metodo: "PATCH",
@@ -238,6 +273,180 @@ export const RUTAS: Ruta[] = [
     query: s.reglasPorFecha,
     handler: (ctx, { query }) => h.listReglas(ctx, query.fecha),
   }),
+  ruta({
+    metodo: "GET",
+    ruta: "/documentos",
+    etiqueta: "Documentos",
+    resumen: "Versiones del convenio de registro y del aviso de privacidad de la empresa.",
+    handler: (ctx) => d.listDocumentos(ctx),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/documentos",
+    etiqueta: "Documentos",
+    resumen:
+      "Publica una versión nueva de un documento (con texto propio o con la plantilla de Mi Jornada). Deja pendientes los consentimientos.",
+    body: d.documentoPublicar,
+    status: 201,
+    handler: (ctx, { body }) => d.publishDocumento(ctx, body),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/documentos/mios",
+    etiqueta: "Documentos",
+    resumen:
+      "Documentos vigentes del trabajador que llama, listos para leer, con su estado de aceptación.",
+    handler: (ctx, { meta }) => d.getMisDocumentos(ctx, meta.origin),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/documentos/{id}/aceptacion",
+    etiqueta: "Documentos",
+    resumen: "Firma simple: el trabajador acepta la versión vigente tecleando su nombre completo.",
+    body: d.documentoAceptar,
+    status: 201,
+    handler: (ctx, { params, body, meta }) =>
+      d.acceptDocumento(ctx, param(params, "id"), body.nombre, meta.origen),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/incidencias",
+    etiqueta: "Incidencias",
+    resumen: "Incidencias visibles para quien llama, con filtros por estado, centro y persona.",
+    query: i.incidenciasFiltro,
+    handler: (ctx, { query }) => i.listIncidencias(ctx, query),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/incidencias",
+    etiqueta: "Incidencias",
+    resumen:
+      "Abre una incidencia (olvido, corrección de hora, permiso, trabajo desde casa o falta justificada).",
+    body: i.incidenciaCrear,
+    status: 201,
+    handler: (ctx, { body }) => i.createIncidencia(ctx, body),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/incidencias/{id}/resolucion",
+    etiqueta: "Incidencias",
+    resumen: "Aprueba o rechaza una incidencia. Al aprobar se inserta el evento que corresponde.",
+    body: i.incidenciaResolver,
+    handler: (ctx, { params, body }) => i.resolveIncidencia(ctx, param(params, "id"), body.aprobar),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/incidencias/{id}/respuesta",
+    etiqueta: "Incidencias",
+    resumen: "El trabajador manifiesta su conformidad o inconformidad con una incidencia.",
+    body: i.incidenciaResponder,
+    handler: (ctx, { params, body }) => i.respondIncidencia(ctx, param(params, "id"), body),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/marcajes",
+    etiqueta: "Días",
+    resumen:
+      "Marcajes de una persona entre dos fechas: hora original, hora vigente, corrección y conformidad.",
+    query: i.detalleDias,
+    handler: (ctx, { query }) => i.getDetalleMarcajes(ctx, query),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/cuenta",
+    etiqueta: "Cuenta",
+    resumen: "Plan, límite de personas y si la administración está en solo lectura.",
+    handler: (ctx) => getEstadoCuenta(ctx),
+  }),
+  ruta({
+    metodo: "PATCH",
+    ruta: "/cuenta/facturacion",
+    etiqueta: "Cuenta",
+    resumen: "Datos fiscales para la factura (RFC, régimen, código postal y uso de CFDI).",
+    body: p.facturacionActualizar,
+    handler: (ctx, { body }) => p.updateFacturacion(ctx, body),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/cuenta/checkout",
+    etiqueta: "Cuenta",
+    resumen: "Abre el Checkout de Stripe para contratar un plan. Devuelve la URL de pago.",
+    body: p.checkoutCrear,
+    status: 201,
+    handler: (ctx, { body, meta }) =>
+      p.createCheckout(ctx, meta.servicios.stripe(), body, meta.origin),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/cuenta/portal",
+    etiqueta: "Cuenta",
+    resumen: "Abre el portal de facturación de Stripe (cambiar plan o tarjeta). Devuelve la URL.",
+    status: 201,
+    handler: (ctx, { meta }) => p.createPortal(ctx, meta.servicios.stripe(), meta.origin),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/reportes",
+    etiqueta: "Reportes",
+    resumen: "Reportes generados, del más reciente al más antiguo.",
+    handler: (ctx) => r.listReportes(ctx),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/reportes",
+    etiqueta: "Reportes",
+    resumen:
+      "Genera un reporte (inspección, periodo o trabajador): PDF y CSV en el bucket reportes, con sus huellas.",
+    body: r.reporteCrear,
+    status: 201,
+    handler: (ctx, { body, meta }) => r.createReporte(ctx, body, meta.servicios, meta.origin),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/reportes/{id}/verificacion",
+    etiqueta: "Reportes",
+    resumen: "Verifica la cadena de hashes de cada persona del reporte en su periodo.",
+    handler: (ctx, { params }) => r.verifyReporte(ctx, param(params, "id")),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/reportes/{id}/accesos",
+    etiqueta: "Reportes",
+    resumen: "Accesos de inspector de un reporte.",
+    handler: (ctx, { params }) => r.listAccesosInspector(ctx, param(params, "id")),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/reportes/{id}/accesos",
+    etiqueta: "Reportes",
+    resumen:
+      "Crea un enlace temporal de inspector (72 h, revocable). El enlace solo se muestra una vez.",
+    status: 201,
+    handler: (ctx, { params, meta }) =>
+      r.createAccesoInspector(ctx, param(params, "id"), meta.servicios, meta.origin),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/reportes/{id}/consultas",
+    etiqueta: "Reportes",
+    resumen: "Consultas y descargas del inspector sobre un reporte, con IP y hora.",
+    handler: (ctx, { params }) => r.listConsultasInspector(ctx, param(params, "id")),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/accesos-inspector/{id}/revocacion",
+    etiqueta: "Reportes",
+    resumen: "Revoca un acceso de inspector.",
+    handler: (ctx, { params }) => r.revokeAccesoInspector(ctx, param(params, "id")),
+  }),
+  ruta({
+    metodo: "GET",
+    ruta: "/consentimientos",
+    etiqueta: "Documentos",
+    resumen:
+      "Estado del consentimiento de cada trabajador activo frente a los documentos vigentes.",
+    handler: (ctx) => d.listConsentimientos(ctx),
+  }),
 ];
 
 function match(pattern: string, segments: string[]): Record<string, string> | null {
@@ -261,11 +470,26 @@ function json(status: number, body: unknown): Response {
 
 export const errorResponse = errorResponseFrom;
 
+const sinServicio = (): never => {
+  throw new ApiError(501, "no_disponible", "Este servidor no puede generar reportes.");
+};
+const SIN_SERVICIOS: r.Servicios = {
+  pdf: sinServicio,
+  qr: sinServicio,
+  admin: sinServicio,
+  stripe: () => p.createStripe(undefined),
+  correo: () => Promise.resolve(false),
+};
+
 export interface HandleOptions {
   /** Contexto de quien llama, o null si no hay sesión válida. */
   getCtx: () => Promise<Ctx | null>;
   /** Peticiones por minuto y por tenant. */
   limitePorMinuto?: number;
+  /** Origen público del sitio; por defecto, el de la petición. */
+  origin?: string;
+  /** PDF, QR y cliente de servicio. Sin ellos, las rutas que los necesitan responden 501. */
+  servicios?: r.Servicios;
 }
 
 /** Atiende una petición a /api/v1/<segments>. */
@@ -317,7 +541,12 @@ export async function handleRequest(
       body = r.body.parse(parsed);
     }
 
-    return json(r.status ?? 200, await r.handler(ctx, { params, query, body }));
+    const meta: Meta = {
+      origen: d.origenDe(request.headers),
+      origin: options.origin ?? new URL(request.url).origin,
+      servicios: options.servicios ?? SIN_SERVICIOS,
+    };
+    return json(r.status ?? 200, await r.handler(ctx, { params, query, body, meta }));
   } catch (error) {
     return errorResponse(error);
   }

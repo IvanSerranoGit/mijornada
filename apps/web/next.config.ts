@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
     "@mijornada/offline",
     "@mijornada/ui",
   ],
+  // Chromium para los PDF: se carga en tiempo de ejecución, no se empaqueta.
+  serverExternalPackages: ["playwright-core", "@sparticuz/chromium"],
 };
 
 export default nextConfig;

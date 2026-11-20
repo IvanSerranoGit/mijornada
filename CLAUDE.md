@@ -44,6 +44,21 @@ Las tablas derivadas (`dia_laboral`, `resumen_periodo`) deben poder reconstruirs
 - No instalar dependencias nuevas sin anotarlas en el PR con la razón.
 - Si una decisión no está en el documento de fundamentos, detente y pregunta antes de implementar.
 
+## Documentación del producto
+
+Antes de tocar un área, lee su documento; al cambiarla, actualízalo en el mismo PR.
+
+- `docs/hash-encadenado.md`: fórmula del hash por versión y cómo agregar una.
+- `docs/marcaje-sin-conexion.md`: cola local, estados, foto (`foto_estado`) y diagnóstico de dispositivos.
+- `docs/documentos-y-consentimiento.md`: plantillas legales versionadas, PDF y consentimiento.
+- `docs/incidencias.md`: correcciones, conformidad del trabajador y plazo para reportar.
+- `docs/reportes.md`: reporte para inspección, huellas, acceso de inspector y verificación pública.
+- `docs/planes-y-cobro.md`: planes, prueba, gracia de pago, bloqueo suave y Stripe.
+- `docs/correo.md`: correos de Auth y del producto, y avisos diarios.
+- `docs/usuarios.md`: roles e invitación de administradores y supervisores.
+- `docs/preguntas-abogado.md`: decisiones provisionales pendientes de revisión legal.
+- `docs/legal/`: textos legales v0.9 (plantillas del patrón y términos y aviso de Mi Jornada). No pasan por Prettier.
+
 ## Hash encadenado (referencia)
 
 `hash = SHA-256(hash_prev || tenant_id || trabajador_id || tipo || ts_servidor || ts_dispositivo || origen || lat || lng || foto_hash || creado_por)`, donde `hash_prev` es el hash del evento anterior del mismo trabajador (cadena por trabajador). El sello diario guarda la raíz Merkle de los eventos del día por tenant.

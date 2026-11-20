@@ -15,6 +15,7 @@ import {
   type ResumenSemana,
 } from "@mijornada/dominio";
 import type { Ctx } from "./context.ts";
+import { requireCuentaActiva } from "./cuenta.ts";
 import { ApiError, fromDatabase, invalido, noEncontrado } from "./errors.ts";
 import type {
   CentroActualizar,
@@ -41,13 +42,13 @@ function paginate<T extends { id: string }>(rows: T[], limite: number): Pagina<T
 }
 
 /** Quita las llaves con valor undefined (Zod las deja en los objetos parciales). */
-function defined<T extends object>(value: T): { [K in keyof T]: Exclude<T[K], undefined> } {
+export function defined<T extends object>(value: T): { [K in keyof T]: Exclude<T[K], undefined> } {
   return Object.fromEntries(Object.entries(value).filter(([, v]) => v !== undefined)) as {
     [K in keyof T]: Exclude<T[K], undefined>;
   };
 }
 
-function requireTenant(ctx: Ctx): string {
+export function requireTenant(ctx: Ctx): string {
   if (ctx.sesion.tenantId === null) {
     throw new ApiError(409, "sin_empresa", "Tu cuenta todavía no tiene una empresa.");
   }
@@ -93,6 +94,7 @@ export async function createEmpresa(ctx: Ctx, input: EmpresaCrear) {
 }
 
 export async function updateEmpresa(ctx: Ctx, id: string, input: EmpresaActualizar) {
+  await requireCuentaActiva(ctx);
   const { data, error } = await ctx.db
     .schema("tenants")
     .from("empresa")
@@ -118,6 +120,7 @@ export async function listCentros(ctx: Ctx) {
 }
 
 export async function createCentro(ctx: Ctx, input: CentroCrear) {
+  await requireCuentaActiva(ctx);
   const { data, error } = await ctx.db
     .schema("tenants")
     .from("centro_trabajo")
@@ -129,6 +132,7 @@ export async function createCentro(ctx: Ctx, input: CentroCrear) {
 }
 
 export async function updateCentro(ctx: Ctx, id: string, input: CentroActualizar) {
+  await requireCuentaActiva(ctx);
   const { data, error } = await ctx.db
     .schema("tenants")
     .from("centro_trabajo")
@@ -143,6 +147,7 @@ export async function updateCentro(ctx: Ctx, id: string, input: CentroActualizar
 
 /** Da de alta una tablet de kiosco y devuelve su código de enlace de un solo uso. */
 export async function createCodigoEnlace(ctx: Ctx, centroId: string, nombre?: string) {
+  await requireCuentaActiva(ctx);
   const { data, error } = await ctx.db.schema("tenants").rpc("generar_codigo_enlace", {
     centro_id: centroId,
     ...(nombre === undefined ? {} : { nombre }),
@@ -153,6 +158,7 @@ export async function createCodigoEnlace(ctx: Ctx, centroId: string, nombre?: st
 
 /** Genera (o reemplaza) el PIN de administrador del kiosco del centro; se muestra una sola vez. */
 export async function createPinAdmin(ctx: Ctx, centroId: string) {
+  await requireCuentaActiva(ctx);
   const { data, error } = await ctx.db
     .schema("tenants")
     .rpc("generar_pin_admin", { centro_id: centroId });
@@ -182,6 +188,7 @@ export async function listTrabajadores(
 
 /** Alta con horario opcional. Devuelve el PIN y el token del QR en claro, por única vez. */
 export async function createTrabajador(ctx: Ctx, input: TrabajadorCrear) {
+  await requireCuentaActiva(ctx);
   const { data, error } = await ctx.db.schema("tenants").rpc("crear_trabajador", {
     centro_id: input.centro_id,
     nombre: input.nombre,
@@ -207,6 +214,7 @@ export async function createTrabajador(ctx: Ctx, input: TrabajadorCrear) {
 }
 
 export async function updateTrabajador(ctx: Ctx, id: string, input: TrabajadorActualizar) {
+  await requireCuentaActiva(ctx);
   const { data, error } = await ctx.db
     .schema("tenants")
     .from("trabajador")
@@ -238,6 +246,7 @@ export async function listUsuarios(ctx: Ctx) {
 }
 
 export async function updateUsuario(ctx: Ctx, id: string, input: UsuarioActualizar) {
+  await requireCuentaActiva(ctx);
   const { data, error } = await ctx.db
     .schema("tenants")
     .from("usuario")
@@ -265,6 +274,7 @@ export async function listHorarios(ctx: Ctx, trabajadorId: string) {
 
 /** Un horario nunca se sobreescribe: esto cierra el vigente y crea una versión nueva. */
 export async function createHorario(ctx: Ctx, input: HorarioCrear) {
+  await requireCuentaActiva(ctx);
   const { data, error } = await ctx.db.schema("tenants").rpc("crear_horario", {
     trabajador_id: input.trabajador_id,
     vigente_desde: input.vigente_desde,

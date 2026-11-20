@@ -10,7 +10,7 @@ project_id = "mijornada"
 
 [api]
 # Esquemas que expone la API: los que consumen web, PWA y kiosco.
-schemas = ["public", "graphql_public", "tenants", "jornada", "calculo"]
+schemas = ["public", "graphql_public", "tenants", "jornada", "calculo", "cumplimiento"]
 
 [auth]
 site_url = "https://mijornada.xyz"
@@ -27,3 +27,36 @@ uri = "pg-functions://postgres/tenants/claims_token_acceso"
 # verificado.
 [auth.email]
 enable_confirmations = false
+
+# PENDIENTE (cuando el dominio esté verificado en Resend): correo de Auth por SMTP con
+# las plantillas en español de ./templates. Al activarlo se quita el bloque [auth.email]
+# de arriba (vuelve la confirmación de correo). La contraseña SMTP es la llave de Resend
+# y se pasa por variable de entorno al hacer `config push`; nunca va en el repositorio.
+#
+# [auth.email]
+# enable_confirmations = true
+#
+# [auth.email.smtp]
+# enabled = true
+# host = "smtp.resend.com"
+# port = 465
+# user = "resend"
+# pass = "env(RESEND_API_KEY)"
+# admin_email = "hola@mijornada.xyz"
+# sender_name = "Mi Jornada"
+#
+# [auth.email.template.confirmation]
+# subject = "Confirma tu correo en Mi Jornada"
+# content_path = "./supabase/templates/confirmacion.html"
+#
+# [auth.email.template.magic_link]
+# subject = "Tu enlace para entrar a Mi Jornada"
+# content_path = "./supabase/templates/enlace-magico.html"
+#
+# [auth.email.template.recovery]
+# subject = "Restablece tu contraseña de Mi Jornada"
+# content_path = "./supabase/templates/recuperacion.html"
+#
+# [auth.email.template.email_change]
+# subject = "Confirma tu correo nuevo en Mi Jornada"
+# content_path = "./supabase/templates/cambio-de-correo.html"

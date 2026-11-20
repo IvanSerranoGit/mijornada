@@ -1,5 +1,6 @@
 // Marcaje desde el celular cuando el centro exige foto (cámara del teléfono).
 import { expect, test } from "@playwright/test";
+import { aceptarDocumentos } from "./consentimiento.ts";
 
 const WEB = "http://localhost:3000";
 const unique = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -53,6 +54,7 @@ test("marcaje en la PWA con foto obligatoria", async ({ page, context, browserNa
   await page.getByLabel("Tu correo").fill(`mariana-foto-${unique}@prueba.test`);
   await page.getByLabel("Tu PIN de 4 dígitos").fill(pin);
   await page.getByRole("button", { name: "Activar mi acceso" }).click();
+  await aceptarDocumentos(page, "Mariana López");
   await expect(page.getByRole("button", { name: "Registrar entrada" })).toBeVisible();
 
   const eventos = page.waitForResponse(

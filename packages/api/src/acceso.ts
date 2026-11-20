@@ -3,6 +3,7 @@
 // porque crean cuentas de Auth y abren sesiones sin contraseña.
 import { z } from "zod";
 import type { Ctx, Db } from "./context.ts";
+import { requireCuentaActiva } from "./cuenta.ts";
 import { ApiError, fromDatabase } from "./errors.ts";
 
 export const accesoConPin = z.object({
@@ -21,6 +22,7 @@ export interface AccesoConcedido {
 
 /** Genera un enlace personal de un solo uso para que el trabajador active su acceso. */
 export async function createInvitacion(ctx: Ctx, trabajadorId: string) {
+  await requireCuentaActiva(ctx);
   const { data, error } = await ctx.db
     .schema("tenants")
     .rpc("crear_invitacion", { trabajador_id: trabajadorId });

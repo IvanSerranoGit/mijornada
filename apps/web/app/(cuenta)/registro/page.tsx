@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { GOOGLE_AUTH_ENABLED } from "../../../lib/supabase/env.ts";
 import { FormularioCuenta } from "../FormularioCuenta.tsx";
 
@@ -17,6 +18,17 @@ export default async function Page({
         <p className="text-text-secondary">Da de alta tu negocio en menos de 10 minutos.</p>
       </header>
       <FormularioCuenta modo="registro" siguiente={siguiente} google={GOOGLE_AUTH_ENABLED} />
+      <p className="text-nota text-text-secondary">
+        Al crear tu cuenta aceptas los{" "}
+        <Link href="/terminos" className="underline">
+          Términos de servicio
+        </Link>{" "}
+        y el{" "}
+        <Link href="/privacidad" className="underline">
+          Aviso de privacidad
+        </Link>
+        .
+      </p>
     </div>
   );
 }
