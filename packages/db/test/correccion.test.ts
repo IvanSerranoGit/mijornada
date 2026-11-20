@@ -309,3 +309,142 @@ describe("versiones del hash", () => {
     });
   });
 });
+
+describe("respuesta del trabajador, plazo y detalle de marcajes", () => {
+  it("el trabajador responde una sola vez; la inconformidad exige comentario y no cambia la resolución", async () => {
+    await inRollback(async (tx) => {
+      const t = await createTenant(tx, "Uno");
+      const salida = await mark(tx, t, "salida", "2026-11-10 21:00");
+      const incidencia = await openIncident(tx, t, t.dueno, {
+        tipo: "correccion_hora",
+        eventoReferido: salida,
+        hora: "2026-11-10 18:00",
+      });
+      await resolve(tx, t.dueno, incidencia.id);
+
+      const respond = (conforme: boolean, comentario: string | null) => (sp: Tx) =>
+        sp`select cumplimiento.responder_incidencia(${incidencia.id}, ${conforme}, ${comentario})`;
+      await asUser(tx, t.dueno, async () => {
+        expect(await expectPgError(tx, respond(true, null))).toMatch(/Solo el propio trabajador/);
+      });
+      await asUser(tx, t.empleadoA, async () => {
+        expect(await expectPgError(tx, respond(false, "  "))).toMatch(/Explica por qué/);
+        await respond(false, "Salí a las 21:00, no a las 18:00")(tx);
+        expect(await expectPgError(tx, respond(true, null))).toMatch(/Ya respondiste/);
+      });
+
+      const [fila] = await tx`
+        select estado, aceptada_en, inconforme_en is not null as inconforme, comentario_trabajador
+        from cumplimiento.incidencia where id = ${incidencia.id}`;
+      expect(fila).toEqual({
+        estado: "aprobada",
+        aceptada_en: null,
+        inconforme: true,
+        comentario_trabajador: "Salí a las 21:00, no a las 18:00",
+      });
+    });
+  });
+
+  it("una incidencia fuera del plazo de la regla queda como extemporánea, sin bloquearse", async () => {
+    await inRollback(async (tx) => {
+      const t = await createTenant(tx, "Uno");
+      const open = async (diasAtras: number) => {
+        const [row] = await asUser(
+          tx,
+          t.empleadoA,
+          () => tx<{ extemporanea: boolean; habiles: number }[]>`
+            insert into cumplimiento.incidencia (tenant_id, trabajador_id, fecha, tipo, motivo, solicitado_por, extemporanea)
+            values (${t.tenantId}, ${t.trabajadorA}, (now() at time zone ${CDMX})::date - ${diasAtras}::integer,
+                    'permiso', 'Cita médica', ${t.empleadoA.usuario_id}, false)
+            returning extemporanea,
+              calculo.dias_habiles_entre(fecha, (now() at time zone ${CDMX})::date) as habiles`,
+        );
+        if (row === undefined) throw new Error("no se abrió");
+        return row;
+      };
+      // 3 días naturales son a lo más 3 hábiles; 14 son 10 hábiles.
+      expect((await open(3)).extemporanea).toBe(false);
+      expect(await open(14)).toEqual({ extemporanea: true, habiles: 10 });
+
+      expect(
+        (await tx`select calculo.dias_habiles_entre('2026-11-13', '2026-11-20') as n`)[0]?.["n"],
+      ).toBe(5);
+      expect(
+        (
+          await tx`select calculo.regla_vigente('dias_para_reportar_incidencia', current_date) as n`
+        )[0]?.["n"],
+      ).toBe("5");
+    });
+  });
+
+  it("el detalle de marcajes muestra original y corrección lado a lado, con quién autorizó y la conformidad", async () => {
+    await inRollback(async (tx) => {
+      const t = await createTenant(tx, "Uno");
+      await mark(tx, t, "entrada", "2026-11-10 09:00");
+      const salida = await mark(tx, t, "salida", "2026-11-10 21:00");
+      const correccion = await openIncident(tx, t, t.dueno, {
+        tipo: "correccion_hora",
+        eventoReferido: salida,
+        hora: "2026-11-10 18:00",
+      });
+      await resolve(tx, t.dueno, correccion.id);
+      const olvido = await openIncident(tx, t, t.empleadoA, {
+        tipo: "olvido",
+        tipoMarcaje: "entrada",
+        hora: "2026-11-11 08:30",
+      });
+      await resolve(tx, t.supervisorA, olvido.id);
+
+      const detalle = () => tx`
+        select tipo, to_char(hora_original at time zone ${CDMX}, 'HH24:MI') as original,
+               to_char(hora_vigente at time zone ${CDMX}, 'DD HH24:MI') as vigente,
+               correccion_motivo, correccion_autorizo, incidencia_tipo, conformidad, solicitada_por, anulado
+        from jornada.detalle_marcajes(${t.tenantId}, ${t.trabajadorA}, '2026-11-10', '2026-11-11')`;
+      const filas = await asUser(tx, t.dueno, detalle);
+      const correo = async (usuarioId: string) =>
+        (await tx`select tenants.nombre_de_usuario(${usuarioId}) as n`)[0]?.["n"] as string;
+
+      expect(filas.map((f) => ({ ...f }))).toEqual([
+        {
+          tipo: "entrada",
+          original: "09:00",
+          vigente: "10 09:00",
+          correccion_motivo: null,
+          correccion_autorizo: null,
+          incidencia_tipo: null,
+          conformidad: null,
+          solicitada_por: null,
+          anulado: false,
+        },
+        {
+          tipo: "salida",
+          original: "21:00",
+          vigente: "10 18:00",
+          correccion_motivo: "Se me olvidó marcar",
+          correccion_autorizo: await correo(t.dueno.usuario_id),
+          incidencia_tipo: "correccion_hora",
+          conformidad: "sin_respuesta",
+          solicitada_por: await correo(t.dueno.usuario_id),
+          anulado: false,
+        },
+        {
+          tipo: "entrada",
+          original: null,
+          vigente: "11 08:30",
+          correccion_motivo: "Se me olvidó marcar",
+          correccion_autorizo: await correo(t.supervisorA.usuario_id),
+          incidencia_tipo: "olvido",
+          conformidad: "conforme",
+          solicitada_por: "Ana",
+          anulado: false,
+        },
+      ]);
+
+      // El trabajador ve los suyos; otro trabajador, no.
+      expect(await asUser(tx, t.empleadoA, detalle)).toHaveLength(3);
+      await asUser(tx, { ...t.empleadoA, trabajador_id: t.trabajadorB }, async () => {
+        expect(await expectPgError(tx, detalle)).toMatch(/No tienes acceso/);
+      });
+    });
+  });
+});
