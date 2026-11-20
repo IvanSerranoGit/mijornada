@@ -2,6 +2,7 @@ import { Boton, Logo } from "@mijornada/ui";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { salir } from "../(cuenta)/actions.ts";
+import { AvisoDeCuenta } from "./AvisoDeCuenta.tsx";
 import { Navegacion } from "./Navegacion.tsx";
 
 // Marco común del panel del patrón: marca, secciones y salida. Cada página valida su sesión.
@@ -21,6 +22,7 @@ export default function PanelLayout({ children }: { children: ReactNode }) {
         </div>
         <Navegacion />
       </header>
+      <AvisoDeCuenta />
       {children}
     </main>
   );

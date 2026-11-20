@@ -15,6 +15,7 @@ import {
   type Regla,
   type ResumenSemana,
 } from "@mijornada/dominio";
+import type Stripe from "stripe";
 import { z } from "zod";
 import type { Ctx, Db } from "./context.ts";
 import {
@@ -76,6 +77,8 @@ export interface Servicios {
   qr: (texto: string) => Promise<string>;
   /** Cliente con rol de servicio: solo para crear la cuenta del inspector. */
   admin: () => Db;
+  /** Cliente de Stripe; lanza 503 si el entorno no tiene la llave. */
+  stripe: () => Stripe;
 }
 
 export interface SemanaReporte {

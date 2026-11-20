@@ -9,6 +9,7 @@ const SECCIONES = [
   { href: "/panel/incidencias", titulo: "Incidencias" },
   { href: "/panel/documentos", titulo: "Documentos" },
   { href: "/panel/reportes", titulo: "Reportes" },
+  { href: "/panel/plan", titulo: "Plan" },
 ] as const;
 
 /** Secciones del panel del patrón. */

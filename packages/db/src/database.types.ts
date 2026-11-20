@@ -769,17 +769,37 @@ isOneToOne: false
                   ]
                 },"empresa": {
                   Row: {
-                    "correo_privacidad": string | null,"creado_en": string,"domicilio": string | null,"es_despacho": boolean,"estado": string,"id": string,"jurisdiccion": string,"logo_url": string | null,"onboarding_completado_en": string | null,"plan": string,"razon_social": string,"rfc": string | null,"sector": string | null,"tamano": string,"telefono_privacidad": string | null,"zona_horaria": string
+                    "correo_privacidad": string | null,"cp_fiscal": string | null,"creado_en": string,"domicilio": string | null,"es_despacho": boolean,"estado": string,"id": string,"jurisdiccion": string,"logo_url": string | null,"onboarding_completado_en": string | null,"pago_fallido_en": string | null,"plan": string,"plan_ciclo": string | null,"plan_hasta": string | null,"prueba_hasta": string,"razon_social": string,"regimen_fiscal": string | null,"rfc": string | null,"sector": string | null,"stripe_customer_id": string | null,"stripe_subscription_id": string | null,"tamano": string,"telefono_privacidad": string | null,"uso_cfdi": string | null,"zona_horaria": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "correo_privacidad"?: string | null,"creado_en"?: string,"domicilio"?: string | null,"es_despacho"?: boolean,"estado"?: string,"id"?: string,"jurisdiccion": string,"logo_url"?: string | null,"onboarding_completado_en"?: string | null,"plan"?: string,"razon_social": string,"rfc"?: string | null,"sector"?: string | null,"tamano": string,"telefono_privacidad"?: string | null,"zona_horaria"?: string
+                    "correo_privacidad"?: string | null,"cp_fiscal"?: string | null,"creado_en"?: string,"domicilio"?: string | null,"es_despacho"?: boolean,"estado"?: string,"id"?: string,"jurisdiccion": string,"logo_url"?: string | null,"onboarding_completado_en"?: string | null,"pago_fallido_en"?: string | null,"plan"?: string,"plan_ciclo"?: string | null,"plan_hasta"?: string | null,"prueba_hasta"?: string,"razon_social": string,"regimen_fiscal"?: string | null,"rfc"?: string | null,"sector"?: string | null,"stripe_customer_id"?: string | null,"stripe_subscription_id"?: string | null,"tamano": string,"telefono_privacidad"?: string | null,"uso_cfdi"?: string | null,"zona_horaria"?: string
                   }
                   Update: {
-                    "correo_privacidad"?: string | null,"creado_en"?: string,"domicilio"?: string | null,"es_despacho"?: boolean,"estado"?: string,"id"?: string,"jurisdiccion"?: string,"logo_url"?: string | null,"onboarding_completado_en"?: string | null,"plan"?: string,"razon_social"?: string,"rfc"?: string | null,"sector"?: string | null,"tamano"?: string,"telefono_privacidad"?: string | null,"zona_horaria"?: string
+                    "correo_privacidad"?: string | null,"cp_fiscal"?: string | null,"creado_en"?: string,"domicilio"?: string | null,"es_despacho"?: boolean,"estado"?: string,"id"?: string,"jurisdiccion"?: string,"logo_url"?: string | null,"onboarding_completado_en"?: string | null,"pago_fallido_en"?: string | null,"plan"?: string,"plan_ciclo"?: string | null,"plan_hasta"?: string | null,"prueba_hasta"?: string,"razon_social"?: string,"regimen_fiscal"?: string | null,"rfc"?: string | null,"sector"?: string | null,"stripe_customer_id"?: string | null,"stripe_subscription_id"?: string | null,"tamano"?: string,"telefono_privacidad"?: string | null,"uso_cfdi"?: string | null,"zona_horaria"?: string
                   }
                   Relationships: [
                     
+                  ]
+                },"evento_stripe": {
+                  Row: {
+                    "id": string,"recibido_en": string,"tenant_id": string | null,"tipo": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "id": string,"recibido_en"?: string,"tenant_id"?: string | null,"tipo": string
+                  }
+                  Update: {
+                    "id"?: string,"recibido_en"?: string,"tenant_id"?: string | null,"tipo"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "evento_stripe_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "empresa"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"horario": {
                   Row: {
@@ -946,6 +966,9 @@ isOneToOne: false
             "aceptar_invitacion":
 { Args: { "p_auth_user_id": string,"p_pin": string,"p_token": string }; Returns: string
                            },
+"aplicar_evento_stripe":
+{ Args: { "p_ciclo": string,"p_customer_id": string,"p_evento_id": string,"p_pago_fallido": boolean,"p_plan": string,"p_plan_hasta": string,"p_subscription_id": string,"p_tenant_id": string,"p_tipo": string }; Returns: boolean
+                           },
 "centro_de_trabajador":
 { Args: { "p_trabajador_id": string }; Returns: string
                            },
@@ -1013,6 +1036,11 @@ isOneToOne: false
 "es_supervisor_de_centro":
 { Args: { "p_centro_id": string,"p_tenant_id": string }; Returns: boolean
                            },
+"estado_de_cuenta":
+{ Args: { "p_tenant_id": string }; Returns: {
+              "acceso": string,"limite_personas": number,"motivo": string,"personas_activas": number,"plan": string,"plan_ciclo": string,"plan_hasta": string,"prueba_hasta": string,"tiene_suscripcion": boolean
+            }[]
+                           },
 "generar_codigo_enlace":
 { Args: { "centro_id": string,"nombre"?: string }; Returns: string
                            },
@@ -1052,6 +1080,9 @@ isOneToOne: false
 { Args: { "p_token": string }; Returns: {
               "centro": string,"empresa": string,"foto": boolean,"zona_horaria": string
             }[]
+                           },
+"limite_de_plan":
+{ Args: { "p_plan": string }; Returns: number
                            },
 "llave_cifrado":
 { Args: { "p_tenant_id": string }; Returns: string

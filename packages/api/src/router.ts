@@ -2,10 +2,12 @@
 // Request y Response estándar, así que cualquier app puede montarla.
 import { z } from "zod";
 import type { Ctx } from "./context.ts";
+import { getEstadoCuenta } from "./cuenta.ts";
 import { ApiError, errorResponseFrom, fromDatabase, noAutenticado } from "./errors.ts";
 import * as d from "./documentos.ts";
 import * as h from "./handlers.ts";
 import * as i from "./incidencias.ts";
+import * as p from "./pagos.ts";
 import * as r from "./reportes.ts";
 import * as s from "./schemas.ts";
 
@@ -332,6 +334,39 @@ export const RUTAS: Ruta[] = [
   }),
   ruta({
     metodo: "GET",
+    ruta: "/cuenta",
+    etiqueta: "Cuenta",
+    resumen: "Plan, límite de personas y si la administración está en solo lectura.",
+    handler: (ctx) => getEstadoCuenta(ctx),
+  }),
+  ruta({
+    metodo: "PATCH",
+    ruta: "/cuenta/facturacion",
+    etiqueta: "Cuenta",
+    resumen: "Datos fiscales para la factura (RFC, régimen, código postal y uso de CFDI).",
+    body: p.facturacionActualizar,
+    handler: (ctx, { body }) => p.updateFacturacion(ctx, body),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/cuenta/checkout",
+    etiqueta: "Cuenta",
+    resumen: "Abre el Checkout de Stripe para contratar un plan. Devuelve la URL de pago.",
+    body: p.checkoutCrear,
+    status: 201,
+    handler: (ctx, { body, meta }) =>
+      p.createCheckout(ctx, meta.servicios.stripe(), body, meta.origin),
+  }),
+  ruta({
+    metodo: "POST",
+    ruta: "/cuenta/portal",
+    etiqueta: "Cuenta",
+    resumen: "Abre el portal de facturación de Stripe (cambiar plan o tarjeta). Devuelve la URL.",
+    status: 201,
+    handler: (ctx, { meta }) => p.createPortal(ctx, meta.servicios.stripe(), meta.origin),
+  }),
+  ruta({
+    metodo: "GET",
     ruta: "/reportes",
     etiqueta: "Reportes",
     resumen: "Reportes generados, del más reciente al más antiguo.",
@@ -419,7 +454,12 @@ export const errorResponse = errorResponseFrom;
 const sinServicio = (): never => {
   throw new ApiError(501, "no_disponible", "Este servidor no puede generar reportes.");
 };
-const SIN_SERVICIOS: r.Servicios = { pdf: sinServicio, qr: sinServicio, admin: sinServicio };
+const SIN_SERVICIOS: r.Servicios = {
+  pdf: sinServicio,
+  qr: sinServicio,
+  admin: sinServicio,
+  stripe: () => p.createStripe(undefined),
+};
 
 export interface HandleOptions {
   /** Contexto de quien llama, o null si no hay sesión válida. */

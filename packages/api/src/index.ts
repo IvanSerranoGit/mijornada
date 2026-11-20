@@ -7,6 +7,7 @@ export const API_BASE_PATH = `/api/${API_VERSION}`;
 
 export * from "./acceso.ts";
 export * from "./context.ts";
+export * from "./cuenta.ts";
 export * from "./errors.ts";
 export * from "./handlers.ts";
 export * from "./kiosco.ts";
@@ -17,3 +18,4 @@ export * from "./router.ts";
 export * from "./schemas.ts";
 export * from "./documentos.ts";
 export * from "./incidencias.ts";
+export * from "./pagos.ts";

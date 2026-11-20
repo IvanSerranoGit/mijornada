@@ -219,7 +219,7 @@ describe("aislamiento entre tenants", () => {
 });
 
 describe("permisos por rol", () => {
-  it("el administrador administra el tenant, pero no cambia el plan ni crea dueños", async () => {
+  it("el administrador administra el tenant, pero nadie cambia el plan desde la API ni él crea dueños", async () => {
     await inRollback(async (tx) => {
       const uno = await seedTenant(tx, "Uno");
 
@@ -231,9 +231,9 @@ describe("permisos por rol", () => {
         expect(
           await expectPgError(
             tx,
-            (sp) => sp`update tenants.empresa set plan = 'pro' where id = ${uno.tenantId}`,
+            (sp) => sp`update tenants.empresa set plan = 'negocio' where id = ${uno.tenantId}`,
           ),
-        ).toMatch(/Solo el dueño puede cambiar el plan/);
+        ).toMatch(/permission denied/);
 
         const sub = uno.empleadoA.sub ?? "";
         expect(
@@ -248,10 +248,14 @@ describe("permisos por rol", () => {
         expect(demoted.count).toBe(0);
       });
 
+      // El plan lo fija el cobro (webhook de Stripe, en el servidor): tampoco el dueño lo cambia.
       await asUser(tx, uno.dueno, async () => {
-        const updated =
-          await tx`update tenants.empresa set plan = 'pro' where id = ${uno.tenantId}`;
-        expect(updated.count).toBe(1);
+        expect(
+          await expectPgError(
+            tx,
+            (sp) => sp`update tenants.empresa set plan = 'negocio' where id = ${uno.tenantId}`,
+          ),
+        ).toMatch(/permission denied/);
       });
     });
   });
@@ -502,9 +506,9 @@ describe("permisos por rol", () => {
         expect(
           await expectPgError(
             tx,
-            (sp) => sp`update tenants.empresa set plan = 'pro' where id = ${uno.tenantId}`,
+            (sp) => sp`update tenants.empresa set plan = 'negocio' where id = ${uno.tenantId}`,
           ),
-        ).toMatch(/Solo el dueño/);
+        ).toMatch(/permission denied/);
       });
 
       await asUser(tx, uno.dueno, async () => {

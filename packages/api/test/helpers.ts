@@ -4,7 +4,13 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import type { Database } from "@mijornada/db/types";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { handleRequest, sesionFromClaims, type Ctx, type Servicios } from "../src/index.ts";
+import {
+  createStripe,
+  handleRequest,
+  sesionFromClaims,
+  type Ctx,
+  type Servicios,
+} from "../src/index.ts";
 
 interface Status {
   API_URL: string;
@@ -105,6 +111,7 @@ export const servicios: Servicios = {
     Promise.resolve(new TextEncoder().encode(`%PDF-prueba\n${pagina.cuerpoHtml}\n${pagina.pie}`)),
   qr: (texto) => Promise.resolve(`<svg data-qr="${texto}"></svg>`),
   admin: () => admin,
+  stripe: () => createStripe(undefined),
 };
 
 export async function callApi<T = unknown>(

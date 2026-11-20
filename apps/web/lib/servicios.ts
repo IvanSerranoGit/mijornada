@@ -1,5 +1,5 @@
 import "server-only";
-import type { Servicios } from "@mijornada/api";
+import { createStripe, type Servicios } from "@mijornada/api";
 import QRCode from "qrcode";
 import { htmlToPdf } from "./pdf.ts";
 import { createSupabaseAdmin } from "./supabase/admin.ts";
@@ -9,4 +9,5 @@ export const servicios: Servicios = {
   pdf: htmlToPdf,
   qr: (texto) => QRCode.toString(texto, { type: "svg", margin: 0, errorCorrectionLevel: "M" }),
   admin: createSupabaseAdmin,
+  stripe: () => createStripe(process.env["STRIPE_SECRET_KEY"]),
 };

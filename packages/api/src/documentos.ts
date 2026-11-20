@@ -11,6 +11,7 @@ import {
 } from "@mijornada/dominio";
 import { z } from "zod";
 import type { Ctx, Db } from "./context.ts";
+import { requireCuentaActiva } from "./cuenta.ts";
 import { ApiError, fromDatabase, invalido, noEncontrado } from "./errors.ts";
 import { requireTenant } from "./handlers.ts";
 
@@ -199,6 +200,7 @@ export async function getDocumento(ctx: Ctx, id: string) {
  * Los consentimientos de la versión anterior dejan de contar.
  */
 export async function publishDocumento(ctx: Ctx, input: DocumentoPublicar, hoy: Date = new Date()) {
+  await requireCuentaActiva(ctx);
   const tenantId = requireTenant(ctx);
   const empresa = await getEmpresaLegal(ctx, tenantId);
 
@@ -472,6 +474,7 @@ const TIPOS_DE_LOGO: Record<string, string> = {
 
 /** Guarda el logo de la empresa (bucket documentos); aparece en los PDF. */
 export async function uploadLogo(ctx: Ctx, input: { archivo: Uint8Array; tipo_mime: string }) {
+  await requireCuentaActiva(ctx);
   const tenantId = requireTenant(ctx);
   const extension = TIPOS_DE_LOGO[input.tipo_mime];
   if (extension === undefined) throw invalido("El logo debe ser una imagen PNG, JPG o WebP.");
